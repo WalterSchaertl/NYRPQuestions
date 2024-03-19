@@ -1,4 +1,6 @@
 import re
+import datetime
+import shutil
 
 import requests
 import os
@@ -14,6 +16,8 @@ SEND_TEMPLATE = {
     "conversion": [{"target": "txt"}]}
 DOCUMENT_ROOT = "."  # configure to where you want to store results
 SETTINGS = "config.properties"
+SUPPORTED_SUBJECTS = ["Chem", "Hist", "Alg1"] # Subjects known to convert correctly
+SUPPORTED_MONTHS = ["Jan","Feb", "Mar", "Apr", "May","Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
 
 class DocumentControl:
@@ -26,6 +30,14 @@ class DocumentControl:
         """
         Given a year/month/subject to make a working directory, calling the convert methods with convert PDFs to text.
         """
+        # Param checking
+        if subject not in SUPPORTED_SUBJECTS:
+            raise Exception(subject + " is not in the list of supported subjects: " + str(SUPPORTED_SUBJECTS))
+        if int(year) < 1990 or int(year) > int(datetime.datetime.now().date().strftime("%Y")):
+            raise Exception("The year " + year + " is invalid, either before 1990 or in the future")
+        if month not in SUPPORTED_MONTHS:
+            raise Exception(month + " is not a valid month, must be one of: " + str(SUPPORTED_MONTHS))
+
         # Make a working directory
         self.working_dir = os.path.join(DOCUMENT_ROOT, year + "_" + month + "_" + subject)
         if not os.path.exists(self.working_dir):
@@ -36,9 +48,6 @@ class DocumentControl:
             for line in in_file.readlines():
                 if line.startswith("SECRET_KEY"):
                     self.secret_key = line.split("=")[1].strip()
-        print(self.secret_key)
-        if self.secret_key is None:
-            raise Exception("Could not read the secret key for file conversion!")
 
     def get_conversion(self, uri: str, suffix: str, download_original: bool = True) -> str:
         """
@@ -47,10 +56,26 @@ class DocumentControl:
         :param uri: The URI or URL path of a pdf file to convert
         :param suffix: Any suffix to add to the resulting file to add to the file name
         :param download_original: If to also download the file pointed to by the uri parameter
-        :return str: The filepath of the converted file saved locally on success, else empty string
+        :return str: The filepath of the converted file saved locally on success, else raised exception
         """
         print("Processing " + uri)
         is_remote_file = validators.url(uri)
+
+        # Given a local text file, no operation needed, copy it to out working directory
+        if not is_remote_file and uri.endswith(".txt"):
+            # TODO standardize this name with __save_file
+            filename = os.path.join(self.working_dir, self.working_dir + "_" + suffix + ".txt")
+            print("copying " + uri + " to " + filename)
+            if not os.path.samefile(uri, filename):
+                shutil.copy(uri, filename)
+            return filename
+
+        # If we need to go do a conversion, check we have a key
+        if self.secret_key is None:
+            raise Exception("Could not read the secret key for file conversion!")
+        # And that we're converting a PDF
+        if is_remote_file and not uri.endswith(".pdf"):
+            raise Exception("Remote files must be PDFs!")
 
         # If to download the original as well
         if is_remote_file and download_original:
@@ -71,21 +96,21 @@ class DocumentControl:
     @staticmethod
     def __check_response_errors(json_data: dict) -> bool:
         """
-        Given a JSON response, print any errors, and return success state.
+        Given a JSON response, raise an exception if errors are present.
 
         :param json_data: A dictionary blob of json
-        :return: A boolean, True if no errors, else False.
+        :return: A boolean, True if no errors, else an exception will be raised
         """
         if len(json_data.get("errors", [])) > 0:
             print("ERROR returned!")
             for error in json_data["errors"]:
                 print(error)
-            return False
+            raise Exception(str(json_data["errors"]))
         if len(json_data.get("warnings", [])) > 0:
             print("WARNINGS returned!")
-            for warn in json_data["errors"]:
+            for warn in json_data["warnings"]:
                 print(warn)
-            return False
+            raise Exception(str(json_data["warnings"]))
         return True
 
     def __digest_response(self, response) -> str:
@@ -96,14 +121,12 @@ class DocumentControl:
         if response.status_code in [200, 201, 202]:
             # Check to see if we got any errors
             json_data = response.json()
-            if not self.__check_response_errors(json_data):
-                return ""
+            self.__check_response_errors(json_data)
             job_id = json_data["id"]
             job_status = json_data["status"]["code"]
             if job_status not in ["downloading", "processing", "completed"]:
-                print("Response status was not expected, got: " + job_status)
-                print("More information: " + json_data["status"]["info"])
-                return ""
+                print("Job returned status: " + job_status + ". More information: " + json_data["status"]["info"])
+                raise Exception("Response status from converter was not expected, got: " + job_status)
             # They've started processing, grab the job ID to check it
             print("Processing started, waiting to download txt")
             # Wait for the processing to finish (maximum 30 seconds)
@@ -111,9 +134,9 @@ class DocumentControl:
                 # Request the status
                 response = requests.get(POST_URL + "/" + job_id, headers={"X-Oc-Api-Key": self.secret_key})
                 if response.status_code != 200:
-                    print("Got non-success status code: " + str(response.status_code))
+                    print("Got non-success status code waiting for process to finish: " + str(response.status_code))
                     print("Response body: " + str(response.content))
-                    return ""
+                    raise Exception("Got non-success status code waiting for process to finish: " + str(response.status_code))
                 else:
                     json_data = response.json()
                     print("Status: " + json_data["status"]["code"])
@@ -125,7 +148,7 @@ class DocumentControl:
         else:
             print("Returned a non success status: " + str(response.status_code))
             print("Content: " + str(response.content))
-        return ""
+            raise Exception("Non success code (" + str(response.status_code) + ") returned, see log.")
 
     def __convert_pdf_remote_src(self, file_path: str) -> str:
         """
@@ -145,6 +168,8 @@ class DocumentControl:
         Given a local file path, run the conversion.
 
         :param file_path: A URI file path of the converted file
+        :return str: A URL path to the converted text document on success
+        :raises Exception: for any failures on processing
         """
         # Send the post request with no input
         print("Converting: " + file_path)
@@ -156,8 +181,7 @@ class DocumentControl:
         if response.status_code in [200, 201, 202]:
             # Check to see if we got any errors
             json_data = response.json()
-            if not self.__check_response_errors(json_data):
-                return ""
+            self.__check_response_errors(json_data)
             job_id = json_data["id"]
             server = json_data["server"]
             post_url = server + "/upload-file/" + job_id
@@ -167,12 +191,11 @@ class DocumentControl:
                 response = requests.get(POST_URL + "/" + job_id, headers={"X-Oc-Api-Key": self.secret_key})
                 return self.__digest_response(response)
             else:
-                print("Uploading of file returned non-success")
-                return ""
+                raise Exception("Uploading of file returned non-success")
         else:
             print("Returned a non success status: " + str(response.status_code))
             print("Content: " + str(response.content))
-        return ""
+            raise Exception("Non success code (" + str(response.status_code) + ") returned, see log.")
 
     def __save_file(self, uri: str, suffix: str) -> str:
         """
@@ -185,14 +208,12 @@ class DocumentControl:
 
         def __do_action():
             request = requests.get(uri)
-            if request.status_code in [200, 201, 200]:
-                filename = self.working_dir + "/" + self.working_dir + "_" + suffix
+            if request.status_code in [200, 201, 202]:
+                filename = os.path.join(self.working_dir, self.working_dir + "_" + suffix)
                 open(filename, "wb").write(request.content)
                 print("File saved to " + filename)
                 return filename
-            print("Could not download file")
-            return ""
-
+            raise Exception("Could not download converted file")
         try:
             return __do_action()
         except requests.exceptions.ConnectionError:
@@ -200,20 +221,34 @@ class DocumentControl:
             time.sleep(5)
             return __do_action()
 
-    @staticmethod
-    def reformat_answer_key(ans_key_file):
+    def reformat_answer_key(self, ans_key_file):
         """
         Given a text answer file converted from a PDF, find the answers and write a formatted answer file of just those
         Assumes 50 questions.
         """
-        print("Reformatting the answer key")
-        ans_formatted_txt_file = ans_key_file[:-4] + "_formatted.txt"
+        ans_formatted_txt_file = os.path.join(self.working_dir, self.working_dir + "_ans_formatted.txt")
+        print("Reformatting the answer key for file " + str(ans_key_file) + ", saving to " + ans_formatted_txt_file)
+
+        # Check to see if the provided file is already formatted, each line must be numbered 1
+        # to max num lines, and have an answer of 1 to 4
+        with open(ans_key_file, "r") as infile:
+            lines = infile.readlines()
+            is_formatted = True
+            for i in range(len(lines)):
+                ques_ans = lines[i].split()
+                if (len(ques_ans) != 2) or (ques_ans[0] != str(i + 1)) or (ques_ans[1] not in ["1", "2", "3", "4"]):
+                    is_formatted = False
+        if is_formatted:
+            print("Answer key is already formatted! Copying input to output.")
+            if not os.path.samefile(ans_key_file, ans_formatted_txt_file):
+                shutil.copy(ans_key_file, os.path.join(self.working_dir, self.working_dir + "_ans_formatted.txt"))
+            return
+
         with open(ans_key_file, "r") as infile:
             # seek through the file looking for a group of 50 lines with numbers 1-4 on them, but not all 1s
             solutions = list()
             for answer in re.finditer(r"([1-4](\r\n|\r|\n)){50}", infile.read()):
                 if not re.match(r"(1(\r\n|\r|\n)){50}", answer.group()):
-                    print("Found answer " + str(answer.group()))
                     solutions = [ans.strip() for ans in answer.group().split()]
             if len(solutions) > 0:
                 with open(ans_formatted_txt_file, "w") as outfile:
