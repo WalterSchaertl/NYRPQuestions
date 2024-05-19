@@ -221,10 +221,10 @@ class DocumentControl:
             time.sleep(5)
             return __do_action()
 
-    def reformat_answer_key(self, ans_key_file):
+    def reformat_answer_key(self, ans_key_file) -> str:
         """
         Given a text answer file converted from a PDF, find the answers and write a formatted answer file of just those
-        Assumes 50 questions.
+        Assumes 50 questions. Returns the answer file.
         """
         ans_formatted_txt_file = os.path.join(self.working_dir, self.working_dir + "_ans_formatted.txt")
         print("Reformatting the answer key for file " + str(ans_key_file) + ", saving to " + ans_formatted_txt_file)
@@ -241,8 +241,8 @@ class DocumentControl:
         if is_formatted:
             print("Answer key is already formatted! Copying input to output.")
             if not os.path.samefile(ans_key_file, ans_formatted_txt_file):
-                shutil.copy(ans_key_file, os.path.join(self.working_dir, self.working_dir + "_ans_formatted.txt"))
-            return
+                shutil.copy(ans_key_file, ans_formatted_txt_file)
+            return ans_formatted_txt_file
 
         with open(ans_key_file, "r") as infile:
             # seek through the file looking for a group of 50 lines with numbers 1-4 on them, but not all 1s
@@ -256,8 +256,9 @@ class DocumentControl:
                     for ans in solutions:
                         outfile.write(str(question_number) + " " + ans + "\n")
                         question_number += 1
+                return ans_formatted_txt_file
             else:
-                print("Wasn't able to create the answer file!")
+                raise Exception("Wasn't able to create the answer file!")
 
 
 if __name__ == "__main__":

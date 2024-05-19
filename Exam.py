@@ -57,11 +57,11 @@ class Question:
         return str(self.get_as_dict())
 
     def pretty_format(self):
-        return json.dumps(self, indet=4)
+        return json.dumps(self.get_as_dict(), indent=4)
 
     def get_as_dict(self) -> dict:
-        return {"question": self.question_text, "A": self.a, "B": self.b, "C": self.c, "D": self.d,
-                "E": self.e, "ans": self.ans, "unit": self.unit, "diagram": self.diagram_path,
+        return {"number": self.number, "question": self.question_text, "A": self.a, "B": self.b, "C": self.c,
+                "D": self.d, "E": self.e, "ans": self.ans, "unit": self.unit, "diagram": self.diagram_path,
                 "subject": self.exam.subj, "year": self.exam.year, "month": self.exam.month}
 
     def get_validation_errors(self) -> list[str]:
@@ -78,13 +78,14 @@ class Question:
 
 
 class Exam:
-    def __init__(self, woring_dir: str, year: str, month: str, subj: str, inital_text: str, answer_file: str, num_questions: int = 50):
+    def __init__(self, woring_dir: str, year: str, month: str, subj: str, answer_file: str, num_questions: int = 50):
         self.working_dir = woring_dir
         self.year = year
         self.month = month
         self.subj = subj
         self.answers = dict()
         self.num_questions = num_questions
+        self.questions = dict()
 
         # Read in the correct answer
         with open(answer_file) as f:
@@ -93,32 +94,30 @@ class Exam:
                     q, a = line.split()
                     self.answers[int(q)] = int(a)
 
-        # Generate the questions from the initial text (likely to be a partial or complete failure)
-        self.questions = self.generate_questions(inital_text)
-
     def __eq__(self, other):
         if isinstance(other, Exam):
             return self.year == other.year and self.month == other.month and self.subj == other.subj
         else:
             raise TypeError("Only exams can be compared to each other")
 
-    def generate_questions(self, questions_file: str) -> {int: Question}:
-        questions = dict()
+    def generate_questions_from_file(self, questions_file: str):
         # Read in and parse the exam
         with open(questions_file) as f:
             lines = f.readlines()
+        self.generate_questions_from_text(lines)
 
+    def generate_questions_from_text(self, lines: list):
         for i in range(len(lines)):
             # Search for the start of a question
-            match = re.compile(r"^\d* ").match(lines[i])
+            match = re.compile(r"^\d+ ").match(lines[i])
             if match is not None and int(match.group(0)) <= 50:
                 question_number = int(match.group(0))
                 # Start of a question and answers (trim its number) and don't end until the next question
                 # is found or the end of the file
-                question_block = lines[i][len(match.group(0)):]
+                question_block = lines[i][len(match.group(0)):].rstrip()
                 i += 1
                 while i < len(lines) and re.compile(r"^\d{1,2} ").match(lines[i]) is None:
-                    question_block += lines[i]
+                    question_block += " " + lines[i].rstrip()
                     i += 1
                 i -= 1
 
@@ -128,7 +127,8 @@ class Exam:
                 question_text = None
                 try:
                     indexes = sorted([question_block.index("(" + str(i) + ")") for i in range(1, 5)])
-                    question_text = question_block[:indexes[0]].replace("\n", " ").strip()
+                    question_text = question_block[:indexes[0]].rstrip()
+                    # TODO look for key words in the question text to highlight a question as needing a diagram
                     for j in range(4):
                         answer_num = int(question_block[int(indexes[j] + 1)])
                         start = indexes[j]
@@ -137,17 +137,16 @@ class Exam:
                 except ValueError:
                     print("Failed to find all answers for question " + str(question_number))
 
-                questions[question_number] = Question(self, question_number, question_text,
+                self.questions[question_number] = Question(self, question_number, question_text,
                                                       opts[1], opts[2], opts[3], opts[4], None,
                                                       self.answers[question_number], None, None)
         # Create empty questions for those we couldn't find
         for i in range(self.num_questions):
-            if i + 1 not in questions:
-                questions[i + 1] = Question(self, i + 1, None, None, None, None, None, None, self.answers[i + 1], None, None)
-        return questions
+            if i + 1 not in self.questions:
+                self.questions[i + 1] = Question(self, i + 1, None, None, None, None, None, None, self.answers[i + 1], None, None)
 
     def is_valid(self) -> bool:
-        questions_valid = len(self.get_invalid_questions()) == 0
+        questions_valid = len(self.get_invalid_questions()) == 0 and len(self.questions) == self.num_questions
         exam_valid = None not in [self.year, self.month, self.subj]
         return questions_valid and exam_valid
 
@@ -174,6 +173,10 @@ class Exam:
                 raise Exception("Questions are valid, but the exam is not, check year/month/subject are set")
             else:
                 raise Exception("Validation errors on Questions: " + str(invalid_questions))
+
+    def get_question(self, question_number: int) -> Question:
+        # This is one indexed, the first question is "question 1"
+        return self.questions.get(question_number)
 
 
 if __name__ == "__main__":

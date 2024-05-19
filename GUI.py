@@ -3,12 +3,17 @@ import traceback
 from tkinter import *
 from tkinter import filedialog
 import DocumentControl
+import Exam
 
 
 class GUI(Tk):
     def __init__(self):
+        self.exam = None
+        self.current_question = 1
+
         super().__init__()
 
+        # TODO refactor major GUI components as classes
         self.title('Question Creator')
         self.resizable(0, 0)
 
@@ -25,10 +30,7 @@ class GUI(Tk):
         self.pdf_text.insert(END, self.text_of_exam)
         self.pdf_text.grid(row=1, rowspan=9, column=6, columnspan=5, padx=20, pady=5, sticky="nsew")
 
-        self.create_widgets()
-
-    def create_widgets(self):
-        #11x11 grid
+        # self.create_widgets()
 
         # Load/finish buttons
         load_file = Button(self, text="Load File", command=self.file_conversion)
@@ -42,7 +44,7 @@ class GUI(Tk):
         rend_q.grid(row=1, rowspan=4, column=0, columnspan=6, padx=20, pady=5, sticky="nsew")
 
         # Operation buttons
-        prev_q = Button(self, text="Previous")
+        prev_q = Button(self, text="Previous", command=self.previous_question)
         prev_q.grid(row=5, column=0, padx=(20, 2), sticky="nsew")
         upload_pic = Button(self, text="Upload Pic")
         upload_pic.grid(row=5, column=1, padx=2, sticky="nsew")
@@ -52,23 +54,46 @@ class GUI(Tk):
         hyper.grid(row=5, column=3, padx=2, sticky="nsew")
         sub = Button(self, text="Subscript")
         sub.grid(row=5, column=4, padx=2, sticky="nsew")
-        next_q = Button(self, text="Next")
+        next_q = Button(self, text="Next", command=self.next_question)
         next_q.grid(row=5, column=5, padx=(2, 20), sticky="nsew")
 
         # Question Text
-        raw_q = Text(self)
-        raw_q.insert(END, "Just the question layout")
-        raw_q.grid(row=6, rowspan=4, column=0, columnspan=6, padx=20, pady=5, sticky="nsew")
+        self.raw_q = Text(self)
+        self.raw_q.insert(END, "Just the question layout")
+        self.raw_q.grid(row=6, rowspan=4, column=0, columnspan=6, padx=20, pady=5, sticky="nsew")
 
         # Bottom Label
         bottom_l = Label(self, text="Working all day")
-        bottom_l.grid(row=10, column=0, columnspan=11, padx=5, pady=5)
+        bottom_l.grid(row=10, column=0, columnspan=5, padx=5, pady=5)
+
+        # Read the Text and make the questions
+        generate_questions = Button(self, text="Generate Questions", command=self.create_questions)
+        generate_questions.grid(row=10, column=6, columnspan=5, padx=5, pady=5)
+
+    def next_question(self):
+        self.current_question = min(self.current_question + 1, self.exam.num_questions)
+        self.render_question()
+
+    def previous_question(self):
+        self.current_question = max(self.current_question - 1, 1)
+        self.render_question()
+
+    def render_question(self):
+        self.raw_q.delete("1.0", END)
+        self.raw_q.insert("1.0", self.exam.get_question(self.current_question).pretty_format())
+
+    def create_questions(self):
+        self.exam.generate_questions_from_text(self.pdf_text.get("1.0", "end-1c").splitlines())
+        self.render_question()
 
     def file_conversion(self):
+        """
+        Pop up window when the user wants to load the exam and answer files.
+        """
         def select_file(label_to_update: Label, parent_frame: Toplevel) -> None:
             filename = filedialog.askopenfilename(initialdir=DocumentControl.DOCUMENT_ROOT,
                                                   title="Select a File",
-                                                  filetypes=(("PDF files", "*.pdf*"), ("Text files", "*.txt*")))
+                                                  filetypes=( ("Text files", "*.txt*"), ("PDF files", "*.pdf*")))
             label_to_update.configure(text=filename)
             parent_frame.focus_force()
 
@@ -76,6 +101,7 @@ class GUI(Tk):
             status_l.config(text="Process started, this make take up to 10 seconds", fg="blue")
             self.update()
             try:
+                # Load the selected files in to Document Control to be parsed, get back the formated text exam/answers
                 self.doc_control = DocumentControl.DocumentControl(exam_year, exam_month, exam_subj)
                 text_exam = self.doc_control.get_conversion(exam_file, "exam")
                 with(open(text_exam, "r")) as infile:
@@ -85,6 +111,8 @@ class GUI(Tk):
                 # determine if an answer text file should really be processed or not
                 text_ans = self.doc_control.get_conversion(ans_file, "ans" if "formatted" not in ans_file else "ans_formatted")
                 text_ans_formatted = self.doc_control.reformat_answer_key(text_ans)
+                # Load it into the exam and let the user edit the text box before making questions.
+                self.exam = Exam.Exam(self.doc_control.working_dir, exam_year, exam_month, exam_subj, text_ans_formatted)
                 status_l.config(text="Finished! You can close this now", fg="green")
             except Exception as e:
                 traceback.print_exc()
