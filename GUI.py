@@ -4,7 +4,9 @@ from tkinter import *
 from tkinter import filedialog
 import DocumentControl
 import Exam
-
+from tkhtmlview import HTMLLabel
+from pynput import mouse
+from PIL import ImageGrab
 
 class GUI(Tk):
     def __init__(self):
@@ -39,32 +41,31 @@ class GUI(Tk):
         finish.grid(column=10, row=0, sticky="nsew", padx=20, pady=5)
 
         # Rendered question
-        rend_q = Text(self)
-        rend_q.insert(END, "The HTML rendition of the question")
-        rend_q.grid(row=1, rowspan=4, column=0, columnspan=6, padx=20, pady=5, sticky="nsew")
+        self.rend_q = HTMLLabel(self, html="The HTML rendition of the question")
+        self.rend_q.grid(row=1, rowspan=6, column=0, columnspan=6, padx=20, pady=5, sticky="nsew")
 
         # Operation buttons
         prev_q = Button(self, text="Previous", command=self.previous_question)
-        prev_q.grid(row=5, column=0, padx=(20, 2), sticky="nsew")
-        upload_pic = Button(self, text="Upload Pic")
-        upload_pic.grid(row=5, column=1, padx=2, sticky="nsew")
-        take_pic = Button(self, text="Take Pic")
-        take_pic.grid(row=5, column=2, padx=2, sticky="nsew")
+        prev_q.grid(row=7, column=0, padx=(20, 2), sticky="nsew")
+        upload_pic = Button(self, text="Delete Diagram", command=self.delete_diagram)
+        upload_pic.grid(row=7, column=1, padx=2, sticky="nsew")
+        take_pic = Button(self, text="Capture Diagram", command=self.get_diagram)
+        take_pic.grid(row=7, column=2, padx=2, sticky="nsew")
         hyper = Button(self, text="Hyperscript")
-        hyper.grid(row=5, column=3, padx=2, sticky="nsew")
+        hyper.grid(row=7, column=3, padx=2, sticky="nsew")
         sub = Button(self, text="Subscript")
-        sub.grid(row=5, column=4, padx=2, sticky="nsew")
+        sub.grid(row=7, column=4, padx=2, sticky="nsew")
         next_q = Button(self, text="Next", command=self.next_question)
-        next_q.grid(row=5, column=5, padx=(2, 20), sticky="nsew")
+        next_q.grid(row=7, column=5, padx=(2, 20), sticky="nsew")
 
         # Question Text
         self.raw_q = Text(self)
         self.raw_q.insert(END, "Just the question layout")
-        self.raw_q.grid(row=6, rowspan=4, column=0, columnspan=6, padx=20, pady=5, sticky="nsew")
+        self.raw_q.grid(row=8, rowspan=2, column=0, columnspan=6, padx=20, pady=5, sticky="nsew")
 
         # Bottom Label
-        bottom_l = Label(self, text="Working all day")
-        bottom_l.grid(row=10, column=0, columnspan=5, padx=5, pady=5)
+        self.bottom_l = Label(self, text="Working all day")
+        self.bottom_l.grid(row=10, column=0, columnspan=5, padx=5, pady=5)
 
         # Read the Text and make the questions
         generate_questions = Button(self, text="Generate Questions", command=self.create_questions)
@@ -81,9 +82,38 @@ class GUI(Tk):
     def render_question(self):
         self.raw_q.delete("1.0", END)
         self.raw_q.insert("1.0", self.exam.get_question(self.current_question).pretty_format())
+        self.rend_q.html_parser.cached_images = {}  # Force a reread of the image captured
+        self.rend_q.set_html(self.exam.get_question(self.current_question).get_as_html())
 
     def create_questions(self):
         self.exam.generate_questions_from_text(self.pdf_text.get("1.0", "end-1c").splitlines())
+        self.render_question()
+
+    def get_diagram(self):
+        # TODO refactor as an invisible window, draw rectangle when mouse is held down (currently two clicks to
+        #  stop text from being highlighted on a drag), release to capture
+        self.bottom_l.configure(text="Click the left mouse button at the corners of the image")
+        coords = [-1, -1, -1, -1]
+
+        def on_click(x, y, button, pressed):
+            if button == mouse.Button.left and pressed:
+                if coords[0] == -1:
+                    coords[0] = x
+                    coords[1] = y
+                else:
+                    coords[2] = x
+                    coords[3] = y
+                    return False
+        listener = mouse.Listener(on_click=on_click)
+        listener.start()
+        listener.join()
+        bbox = (min(coords[0], coords[2]), min(coords[1], coords[3]), max(coords[0], coords[2]), max(coords[1], coords[3]))
+        self.exam.get_question(self.current_question).set_diagram(ImageGrab.grab(bbox=bbox, all_screens=True))
+        self.render_question()
+        self.bottom_l.configure(text="")
+
+    def delete_diagram(self):
+        self.exam.get_question(self.current_question).delete_diagram()
         self.render_question()
 
     def file_conversion(self):
@@ -106,7 +136,7 @@ class GUI(Tk):
                 text_exam = self.doc_control.get_conversion(exam_file, "exam")
                 with(open(text_exam, "r")) as infile:
                     self.text_of_exam = infile.read()
-                    self.pdf_text.insert(END, self.text_of_exam)
+                    self.pdf_text.insert(END, u'{unicode}'.format(unicode=self.text_of_exam))
                 # TODO this is a hack, find a real solution that doesn't relay on magic names to
                 # determine if an answer text file should really be processed or not
                 text_ans = self.doc_control.get_conversion(ans_file, "ans" if "formatted" not in ans_file else "ans_formatted")

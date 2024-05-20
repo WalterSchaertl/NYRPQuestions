@@ -1,16 +1,19 @@
 import json
 import operator
+import os
 import re
 import sys
 from typing import Optional
+from PIL import Image
 
 
 class Question:
     compare_error = "Questions must have the same exam to compare"
+    diagram_hints = ["diagram", "figure", "plot", "chart"]
 
     def __init__(self, exam: "Exam", number: int, question_text: Optional[str], a: Optional[str],
                  b: Optional[str], c: Optional[str], d: Optional[str], e: Optional[str], ans: int,
-                 unit: Optional[str], diagram_path: Optional[str]):
+                 unit: Optional[str]):
         """
         A valid question requires all of the above parameters except e and a diagram path. Others that are marked
         optional can be None on creation, but must eventually be set to pass validation.
@@ -25,7 +28,8 @@ class Question:
         self.e = e
         self.ans = ans
         self.unit = unit
-        self.diagram_path = diagram_path
+        self.diagram_path = None
+        self.set_diagram(None)
 
     def __compare__(self, other: "Question", op: operator):
         if isinstance(other, Question):
@@ -57,12 +61,41 @@ class Question:
         return str(self.get_as_dict())
 
     def pretty_format(self):
-        return json.dumps(self.get_as_dict(), indent=4)
+        return json.dumps(self.get_as_dict(), indent=4, ensure_ascii=False)
 
     def get_as_dict(self) -> dict:
         return {"number": self.number, "question": self.question_text, "A": self.a, "B": self.b, "C": self.c,
                 "D": self.d, "E": self.e, "ans": self.ans, "unit": self.unit, "diagram": self.diagram_path,
                 "subject": self.exam.subj, "year": self.exam.year, "month": self.exam.month}
+
+    def get_as_html(self) -> str:
+        return """
+        <div class="col-md-10">
+            <h3>Question {index} of {total}</h3>
+            <h3 class="text-center">
+                {question_text}
+            </h3>
+            {image}
+            <div class="centered">
+                <table style="margin-left:auto;margin-right:auto;">
+                  <tr>
+                    <td><button class="btn" id= "a" >A</button><font color="black" id="a_text">{q_a}</font></td>
+                  </tr>
+                  <tr>
+                    <td><button class="btn" id= "b" >B</button><font color="black" id="b_text">{q_b}</font></td>
+                  </tr>
+                  <tr>
+                    <td><button class="btn" id= "c" >C</button><font color="black" id="c_text">{q_c}</font></td>
+                  </tr>
+                  <tr>
+                    <td><button class="btn" id= "d" >D</button><font color="black" id="d_text">{q_d}</font></td>
+                  </tr>
+                </table>
+            </div> 
+        </div>
+        """.format(index=self.number, total=self.exam.num_questions, question_text=self.question_text,
+                   image= "<img src=\"" + self.diagram_path + "\" alt=\"Diagram\">" if self.diagram_path is not None else "",
+                   q_a=self.a, q_b=self.b, q_c=self.c, q_d=self.d)
 
     def get_validation_errors(self) -> list[str]:
         errors = list()
@@ -76,6 +109,25 @@ class Question:
             errors.append("A, B, C, and/or option D is not set")
         return errors
 
+    def get_validation_warnings(self) -> list[str]:
+        warnings = list()
+        # Check to see if there are indications of a diagram but no diagram set
+        if self.question_text is not None and any(x in self.question_text for x in self.diagram_hints):
+            warnings.append("Question text indicates it may have a diagram, but no diagram is set.")
+
+    def set_diagram(self, im: Image) -> None:
+        # Set the diagram for the question. If an image is provided, save it to the path and set it. If an image
+        # is not given, check to see if one exists at the expected path, set it if it does.
+        possible_diagram = os.path.join(self.exam.working_dir, self.exam.working_dir + "_" + str(self.number) + ".png")
+        if im is not None:
+            im.save(possible_diagram)
+        if os.path.exists(possible_diagram):
+            self.diagram_path = possible_diagram
+
+    def delete_diagram(self) -> None:
+        if self.diagram_path is not None and os.path.isfile(self.diagram_path):
+            os.remove(self.diagram_path)
+            self.diagram_path = None
 
 class Exam:
     def __init__(self, woring_dir: str, year: str, month: str, subj: str, answer_file: str, num_questions: int = 50):
@@ -138,12 +190,12 @@ class Exam:
                     print("Failed to find all answers for question " + str(question_number))
 
                 self.questions[question_number] = Question(self, question_number, question_text,
-                                                      opts[1], opts[2], opts[3], opts[4], None,
-                                                      self.answers[question_number], None, None)
+                                                           opts[1], opts[2], opts[3], opts[4], None,
+                                                           self.answers[question_number], None)
         # Create empty questions for those we couldn't find
         for i in range(self.num_questions):
             if i + 1 not in self.questions:
-                self.questions[i + 1] = Question(self, i + 1, None, None, None, None, None, None, self.answers[i + 1], None, None)
+                self.questions[i + 1] = Question(self, i + 1, None, None, None, None, None, None, self.answers[i + 1], None)
 
     def is_valid(self) -> bool:
         questions_valid = len(self.get_invalid_questions()) == 0 and len(self.questions) == self.num_questions
