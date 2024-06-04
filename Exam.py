@@ -129,6 +129,7 @@ class Question:
             os.remove(self.diagram_path)
             self.diagram_path = None
 
+
 class Exam:
     def __init__(self, woring_dir: str, year: str, month: str, subj: str, answer_file: str, num_questions: int = 50):
         self.working_dir = woring_dir
@@ -204,7 +205,7 @@ class Exam:
 
     def get_invalid_questions(self) -> (list, list):
         """
-        Returns a tuple, first is a list of invalid question numbers, second is the actual questions
+        Returns a tuple, first is a list of invalid questions, second is the question numbers
         """
         invalid_questions = list()
         for _, question in self.questions.items():
