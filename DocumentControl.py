@@ -16,7 +16,8 @@ SEND_TEMPLATE = {
     "conversion": [{"target": "txt"}]}
 DOCUMENT_ROOT = "."  # configure to where you want to store results
 SETTINGS = "config.properties"
-SUPPORTED_SUBJECTS = ["Chem", "Hist", "Alg1"] # Subjects known to convert correctly
+# TODO refactor as enums
+SUPPORTED_SUBJECTS = ["Chem", "Hist", "Alg1"]  # Subjects known to convert correctly
 SUPPORTED_MONTHS = ["Jan","Feb", "Mar", "Apr", "May","Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
 

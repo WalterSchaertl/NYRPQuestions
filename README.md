@@ -16,11 +16,9 @@ Python version: 3.9
 ##TODOs
 
 ### Missing Required Functionality
-1. HTML render of questions
-2. Capturing of diagrams for questions
-3. Hyper/Sub script buttons
-4. Save results to JSON and uploading to NYRP project
-5. Popup with which questions could not be generated
+1. Hyper/Sub script buttons
+2. Save results to JSON and uploading to NYRP project
+3. Popup with which questions could not be generated
 
 ### Non Required Improvements
 1. When regenerating questions, keep the files/topics from the old questions
@@ -33,10 +31,11 @@ Python version: 3.9
 4. Project save file for quick resume where it was left off
 5. Undo/Redo operations when editing exam text
 6. Add scroll bar and 'find' to the exam
+7. Jump to question
+8. Add a select unit button
 
 ### Other
 1. Replace 'Working All Day'
 2. Increase font size in question render
 3. Jump focus in exam text box and highlight where the question is from
 4. Auto close window to select exams on successful generation, auto trigger Exam creation when text is populated
-5. Drop E, subject, year, month from question render

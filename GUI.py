@@ -3,11 +3,17 @@ import tkinter.scrolledtext
 import traceback
 from tkinter import *
 from tkinter import filedialog
+from typing import Optional
+
 import DocumentControl
 import Exam
 from tkhtmlview import HTMLLabel
 from pynput import mouse
 from PIL import ImageGrab
+
+import Units
+
+NO_UNIT_SET = "No Unit Set"
 
 class GUI(Tk):
     def __init__(self):
@@ -46,18 +52,22 @@ class GUI(Tk):
         self.rend_q.grid(row=1, rowspan=6, column=0, columnspan=6, padx=20, pady=5, sticky="nsew")
 
         # Operation buttons
-        prev_q = Button(self, text="Previous", command=self.previous_question)
-        prev_q.grid(row=7, column=0, padx=(20, 2), sticky="nsew")
-        upload_pic = Button(self, text="Delete Diagram", command=self.delete_diagram)
-        upload_pic.grid(row=7, column=1, padx=2, sticky="nsew")
-        take_pic = Button(self, text="Capture Diagram", command=self.get_diagram)
-        take_pic.grid(row=7, column=2, padx=2, sticky="nsew")
-        hyper = Button(self, text="Hyperscript")
-        hyper.grid(row=7, column=3, padx=2, sticky="nsew")
-        sub = Button(self, text="Subscript")
-        sub.grid(row=7, column=4, padx=2, sticky="nsew")
-        next_q = Button(self, text="Next", command=self.next_question)
-        next_q.grid(row=7, column=5, padx=(2, 20), sticky="nsew")
+        button_frame = Frame(self, bg="green")
+        button_frame.grid(row=7, column=0, columnspan=6, sticky="nsew", padx=20, pady=5)
+        self.selected_unit = StringVar()
+        self.selected_unit.set("Load an exam to select a label")
+        self.select_unit = OptionMenu(button_frame, self.selected_unit, "Load an exam to select a label")
+
+        prev_q = Button(button_frame, text="Previous", command=self.previous_question)
+        upload_pic = Button(button_frame, text="Delete Diagram", command=self.delete_diagram)
+        take_pic = Button(button_frame, text="Capture Diagram", command=self.get_diagram)
+        hyper = Button(button_frame, text="Hyperscript")
+        sub = Button(button_frame, text="Subscript")
+        # TODO instead of a button to save, maybe auto save on next/previous and just have a button to clear?
+        save_unit = Button(button_frame, text="Set Unit", command=self.save_unit_to_question)
+        next_q = Button(button_frame, text="Next", command=self.next_question)
+        for button in [prev_q, upload_pic, take_pic, self.select_unit, save_unit, hyper, sub, next_q]:
+            button.pack(expand=True, fill='both', side=tkinter.LEFT)
 
         # Question Text
         self.raw_q = Text(self)
@@ -79,15 +89,40 @@ class GUI(Tk):
 
     def save_file(self):
         if self.exam_filename is not None:
-            saved_exam_file = self.exam_filename[0: self.exam_filename.rfind(".")] + "_in_progress.txt"
-            with open(saved_exam_file, "w") as outf:
+            # TODO better way of track in progress files without overwriting the original
+            saved_exam_file = self.exam_filename[0: self.exam_filename.rfind(".")]
+            if not saved_exam_file.endswith("_in_progress"):
+                saved_exam_file += "_in_progress"
+            with open(saved_exam_file + ".txt", "w") as outf:
                 outf.write(self.pdf_text.get(1.0, "end-1c"))
 
+    def refresh_unit_menu(self, default: Optional[str]):
+        menu = self.select_unit.children["menu"]
+        menu.delete(0, "end")
+        labels = [label for _, label in Units.get_units(self.exam)]
+        for new_label in labels:
+            menu.add_command(label=new_label, command=lambda v=new_label: self.selected_unit.set(v))
+        if default is not None:
+            self.selected_unit.set(default)
+        else:
+            self.selected_unit.set(NO_UNIT_SET)
+
+    def save_unit_to_question(self):
+        if self.selected_unit.get() != NO_UNIT_SET:
+            self.exam.get_question(self.current_question).unit = self.selected_unit.get()
+            self.render_question()
+
     def next_question(self):
+        if self.exam is None:
+            self.bottom_l.config(text="An exam must be loaded before questions can be selected", fg="red")
+            return
         self.current_question = min(self.current_question + 1, self.exam.num_questions)
         self.render_question()
 
     def previous_question(self):
+        if self.exam is None:
+            self.bottom_l.config(text="An exam must be loaded before questions can be selected", fg="red")
+            return
         self.current_question = max(self.current_question - 1, 1)
         self.render_question()
 
@@ -95,7 +130,9 @@ class GUI(Tk):
         self.raw_q.delete("1.0", END)
         self.raw_q.insert("1.0", self.exam.get_question(self.current_question).pretty_format())
         self.rend_q.html_parser.cached_images = {}  # Force a reread of the image captured
-        self.rend_q.set_html(self.exam.get_question(self.current_question).get_as_html())
+        current_question = self.exam.get_question(self.current_question)
+        self.rend_q.set_html(current_question.get_as_html())
+        self.refresh_unit_menu(current_question.unit)
 
     def create_questions(self):
         if self.exam is None:
@@ -106,6 +143,9 @@ class GUI(Tk):
         self.bottom_l.config(text="Questions rendered!", fg="green")
 
     def get_diagram(self):
+        if self.exam is None:
+            self.bottom_l.config(text="An exam must be loaded before Diagrams can be obtained", fg="red")
+            return
         # TODO refactor as an invisible window, draw rectangle when mouse is held down (currently two clicks to
         #  stop text from being highlighted on a drag), release to capture
         self.bottom_l.configure(text="Click the left mouse button at the corners of the image")
@@ -129,6 +169,9 @@ class GUI(Tk):
         self.bottom_l.configure(text="")
 
     def delete_diagram(self):
+        if self.exam is None:
+            self.bottom_l.config(text="An exam must be loaded before Diagrams can be deleted", fg="red")
+            return
         self.exam.get_question(self.current_question).delete_diagram()
         self.render_question()
 
