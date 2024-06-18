@@ -1,4 +1,5 @@
 import datetime
+import os
 import tkinter.scrolledtext
 import traceback
 from tkinter import *
@@ -13,7 +14,6 @@ from PIL import ImageGrab
 
 import Units
 
-NO_UNIT_SET = "No Unit Set"
 
 class GUI(Tk):
     def __init__(self):
@@ -105,17 +105,17 @@ class GUI(Tk):
         if default is not None:
             self.selected_unit.set(default)
         else:
-            self.selected_unit.set(NO_UNIT_SET)
+            self.selected_unit.set(labels[0])
 
     def save_unit_to_question(self):
-        if self.selected_unit.get() != NO_UNIT_SET:
-            self.exam.get_question(self.current_question).unit = self.selected_unit.get()
-            self.render_question()
+        self.exam.get_question(self.current_question).set_unit(self.selected_unit.get())
+        self.render_question()
 
     def next_question(self):
         if self.exam is None:
             self.bottom_l.config(text="An exam must be loaded before questions can be selected", fg="red")
             return
+        self.save_unit_to_question()
         self.current_question = min(self.current_question + 1, self.exam.num_questions)
         self.render_question()
 
@@ -123,6 +123,7 @@ class GUI(Tk):
         if self.exam is None:
             self.bottom_l.config(text="An exam must be loaded before questions can be selected", fg="red")
             return
+        self.save_unit_to_question()
         self.current_question = max(self.current_question - 1, 1)
         self.render_question()
 
@@ -132,7 +133,7 @@ class GUI(Tk):
         self.rend_q.html_parser.cached_images = {}  # Force a reread of the image captured
         current_question = self.exam.get_question(self.current_question)
         self.rend_q.set_html(current_question.get_as_html())
-        self.refresh_unit_menu(current_question.unit)
+        self.refresh_unit_menu(current_question.unit_text)
 
     def create_questions(self):
         if self.exam is None:
@@ -187,6 +188,13 @@ class GUI(Tk):
             parent_frame.focus_force()
 
         def load_files(exam_year: str, exam_month: str, exam_subj: str, exam_file: str, ans_file: str, win: Toplevel) -> None:
+            self.doc_control = DocumentControl.DocumentControl(exam_year, exam_month, exam_subj)
+            # If the local exam file or answer files aren't set, see if we can get them based on the year/month/subject
+            base_name = os.path.join(self.doc_control.working_dir, self.doc_control.working_dir + "_")
+            if exam_file == "":
+                exam_file = base_name + "exam_in_progress.txt"
+            if ans_file == "":
+                ans_file = base_name + "ans_formatted.txt"
             # Validate all files saved
             if "" in [exam_year, exam_month, exam_subj, exam_file, ans_file]:
                 status_l.config(text="Missing one or more of: year, month, subject, exam file, answer file.", fg="red")
@@ -197,8 +205,7 @@ class GUI(Tk):
             status_l.config(text="Process started, this make take up to 10 seconds", fg="blue")
             self.update()
             try:
-                # Load the selected files in to Document Control to be parsed, get back the formated text exam/answers
-                self.doc_control = DocumentControl.DocumentControl(exam_year, exam_month, exam_subj)
+                # Load the selected files in to Document Control to be parsed, get back the formatted text exam/answers
                 text_exam = self.doc_control.get_conversion(exam_file, "exam")
                 with(open(text_exam, "r")) as infile:
                     self.text_of_exam = infile.read()

@@ -13,7 +13,7 @@ class Question:
 
     def __init__(self, exam: "Exam", number: int, question_text: Optional[str], a: Optional[str],
                  b: Optional[str], c: Optional[str], d: Optional[str], e: Optional[str], ans: int,
-                 unit: Optional[str]):
+                 unit_text: Optional[str]):
         """
         A valid question requires all of the above parameters except e and a diagram path. Others that are marked
         optional can be None on creation, but must eventually be set to pass validation.
@@ -27,7 +27,8 @@ class Question:
         self.d = d
         self.e = e
         self.ans = ans
-        self.unit = unit
+        self.unit_text = unit_text
+        self.unit = None if unit_text is None else int(unit_text[0: unit_text.index(":")])
         self.diagram_path = None
         self.set_diagram(None)
 
@@ -65,8 +66,8 @@ class Question:
 
     def get_as_dict(self) -> dict:
         return {"number": self.number, "question": self.question_text, "A": self.a, "B": self.b, "C": self.c,
-                "D": self.d, "E": self.e, "ans": self.ans, "unit": self.unit, "diagram": self.diagram_path,
-                "subject": self.exam.subj, "year": self.exam.year, "month": self.exam.month}
+                "D": self.d, "E": self.e, "ans": self.ans, "unit_text": self.unit_text, "unit": self.unit,
+                "diagram": self.diagram_path, "subject": self.exam.subj, "year": self.exam.year, "month": self.exam.month}
 
     def get_as_html(self) -> str:
         return """
@@ -101,7 +102,7 @@ class Question:
         errors = list()
         if self.ans is None:
             errors.append("Answer is not set")
-        if self.unit is None:
+        if self.unit is None or self.unit == 0:
             errors.append("Unit is not set")
         if self.question_text is None:
             errors.append("Question text is not set")
@@ -128,6 +129,10 @@ class Question:
         if self.diagram_path is not None and os.path.isfile(self.diagram_path):
             os.remove(self.diagram_path)
             self.diagram_path = None
+
+    def set_unit(self, unit_text: str):
+        self.unit_text = unit_text
+        self.unit = None if unit_text is None else int(unit_text[0: unit_text.index(":")])
 
 
 class Exam:
@@ -190,9 +195,10 @@ class Exam:
                 except ValueError:
                     print("Failed to find all answers for question " + str(question_number))
 
+                unit_text = self.questions[question_number].unit_text if self.questions.get(question_number) is not None else None
                 self.questions[question_number] = Question(self, question_number, question_text,
                                                            opts[1], opts[2], opts[3], opts[4], None,
-                                                           self.answers[question_number], None)
+                                                           self.answers[question_number], unit_text)
         # Create empty questions for those we couldn't find
         for i in range(self.num_questions):
             if i + 1 not in self.questions:

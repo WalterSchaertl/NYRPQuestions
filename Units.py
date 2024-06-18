@@ -4,6 +4,7 @@ import DocumentControl
 from Exam import Exam
 
 CHEM_UNITS = [
+	("0", "0: None"),
 	("1", "1: The Atom"),
 	("2", "2: Formulas and Equations"),
 	("3", "3: The Mathematics of Formulas and Equations"),
@@ -21,9 +22,9 @@ CHEM_UNITS = [
 
 def get_units(exam: Optional[Exam]) -> list:
 	if exam is None:
-		return [("-1", "Select an Exam to get units")]
+		return [("0", "Select an Exam to get units")]
 	if exam.subj not in DocumentControl.SUPPORTED_SUBJECTS:
-		return [("-1", "Unrecognized unit")]
+		return [("0", "Unrecognized unit")]
 	if exam.subj == "Chem":
 		return CHEM_UNITS
-	return [("-1", "Unit not supported yet")]
+	return [("0", "Unit not supported yet")]
