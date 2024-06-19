@@ -231,13 +231,13 @@ class DocumentControl:
         print("Reformatting the answer key for file " + str(ans_key_file) + ", saving to " + ans_formatted_txt_file)
 
         # Check to see if the provided file is already formatted, each line must be numbered 1
-        # to max num lines, and have an answer of 1 to 4
+        # to max num lines, and have an answer of 1 to 4 and optional units
         with open(ans_key_file, "r") as infile:
             lines = infile.readlines()
             is_formatted = True
             for i in range(len(lines)):
                 ques_ans = lines[i].split()
-                if (len(ques_ans) != 2) or (ques_ans[0] != str(i + 1)) or (ques_ans[1] not in ["1", "2", "3", "4"]):
+                if (len(ques_ans) not in [2, 3]) or (ques_ans[0] != str(i + 1)) or (ques_ans[1] not in ["1", "2", "3", "4"]):
                     is_formatted = False
         if is_formatted:
             print("Answer key is already formatted! Copying input to output.")

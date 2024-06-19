@@ -1,7 +1,6 @@
 from typing import Optional
 
 import DocumentControl
-from Exam import Exam
 
 CHEM_UNITS = [
 	("0", "0: None"),
@@ -20,11 +19,11 @@ CHEM_UNITS = [
 ]
 
 
-def get_units(exam: Optional[Exam]) -> list:
-	if exam is None:
+def get_units(subject: str) -> list:
+	if subject is None:
 		return [("0", "Select an Exam to get units")]
-	if exam.subj not in DocumentControl.SUPPORTED_SUBJECTS:
+	if subject not in DocumentControl.SUPPORTED_SUBJECTS:
 		return [("0", "Unrecognized unit")]
-	if exam.subj == "Chem":
+	if subject == "Chem":
 		return CHEM_UNITS
 	return [("0", "Unit not supported yet")]

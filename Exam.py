@@ -6,6 +6,8 @@ import sys
 from typing import Optional
 from PIL import Image
 
+import Units
+
 
 class Question:
     compare_error = "Questions must have the same exam to compare"
@@ -142,15 +144,19 @@ class Exam:
         self.month = month
         self.subj = subj
         self.answers = dict()
+        self.units = dict()
         self.num_questions = num_questions
         self.questions = dict()
+        self.formatted_answer_file = answer_file
 
-        # Read in the correct answer
+        # Read in the correct answer, formatted as question_number answer_number unit_number[optional] one per line
         with open(answer_file) as f:
             for line in f.readlines():
                 if line.strip() != "":
-                    q, a = line.split()
-                    self.answers[int(q)] = int(a)
+                    tup = line.split()
+                    self.answers[int(tup[0])] = int(tup[1])
+                    if len(tup) == 3:
+                        self.units[int(tup[0])] = int(tup[2])
 
     def __eq__(self, other):
         if isinstance(other, Exam):
@@ -195,7 +201,14 @@ class Exam:
                 except ValueError:
                     print("Failed to find all answers for question " + str(question_number))
 
-                unit_text = self.questions[question_number].unit_text if self.questions.get(question_number) is not None else None
+                # First check a previous in-memory version of the test
+                if self.questions.get(question_number) is not None:
+                    unit_text = self.questions[question_number].unit_text
+                # Second, look at the answer file when the exam was originally loaded
+                elif self.units.get(question_number) is not None:
+                    unit_text = Units.get_units(self.subj)[(self.units.get(question_number))][1]
+                else:
+                    unit_text = None
                 self.questions[question_number] = Question(self, question_number, question_text,
                                                            opts[1], opts[2], opts[3], opts[4], None,
                                                            self.answers[question_number], unit_text)

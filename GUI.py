@@ -39,8 +39,6 @@ class GUI(Tk):
         self.pdf_text.insert(END, self.text_of_exam)
         self.pdf_text.grid(row=1, rowspan=9, column=6, columnspan=5, padx=20, pady=5, sticky="nsew")
 
-        # self.create_widgets()
-
         # Load/finish buttons
         load_file = Button(self, text="Load File", command=self.file_conversion)
         load_file.grid(column=0, row=0, sticky="nsew", padx=20, pady=5)
@@ -87,19 +85,28 @@ class GUI(Tk):
         save_exam_file.grid(row=10, column=7, columnspan=1, padx=20, pady=5)
         self.exam_filename = None
 
+    # TODO is this the right place for this? Might belong in document control
     def save_file(self):
         if self.exam_filename is not None:
             # TODO better way of track in progress files without overwriting the original
             saved_exam_file = self.exam_filename[0: self.exam_filename.rfind(".")]
             if not saved_exam_file.endswith("_in_progress"):
                 saved_exam_file += "_in_progress"
-            with open(saved_exam_file + ".txt", "w") as outf:
-                outf.write(self.pdf_text.get(1.0, "end-1c"))
+            with open(saved_exam_file + ".txt", "w") as outex:
+                outex.write(self.pdf_text.get(1.0, "end-1c"))
+            self.bottom_l.config(text="Exam saved!", fg="green")
+            with open(self.exam.formatted_answer_file, "w") as outa:
+                for i in range(1, self.exam.num_questions + 1):
+                    quest = self.exam.get_question(i)
+                    unit = quest.unit if quest.unit is not None else ""
+                    outa.write(str(i) + " " + str(quest.ans) + " " + str(unit) + "\n")
+        else:
+            self.bottom_l.config(text="No Exam loaded to save", fg="red")
 
     def refresh_unit_menu(self, default: Optional[str]):
         menu = self.select_unit.children["menu"]
         menu.delete(0, "end")
-        labels = [label for _, label in Units.get_units(self.exam)]
+        labels = [label for _, label in Units.get_units(self.exam.subj)]
         for new_label in labels:
             menu.add_command(label=new_label, command=lambda v=new_label: self.selected_unit.set(v))
         if default is not None:
