@@ -15,17 +15,13 @@ Python version: 3.9
 
 ##TODOs
 
-### Missing Required Functionality
-1. Save results to JSON and uploading to NYRP project
-2. Popup with which questions could not be generated
 
 ### Non Required Improvements
 1. Set up keywords for units for autodetection of unit
 2. Add a list to the question of probable errors, even if it parsed correctly. Display these when question is shown. Things like
-   1. Unicode in the question/answer
-   2. Misspelled words (probably missing a space somewhere)
-   3. Mentions a figure/diagram/graph and none set for the question
-   4. Suspected required super/sub scripts (element symbol preceded/followed by a number)
+   1. Misspelled words (probably missing a space somewhere)
+   2. Mentions a figure/diagram/graph and none set for the question
+   3. Suspected required super/sub scripts (element symbol preceded/followed by a number)
 3. Add 'find' to the exam
 4. Jump to question
 
@@ -33,7 +29,6 @@ Python version: 3.9
 1. Replace 'Working All Day'
 2. Increase font size in question render
 3. Jump focus in exam text box and highlight where the question is from
-4. Auto close window to select exams on successful generation, auto trigger Exam creation when text is populated
 
 ### tk_html_widgets
 I forked a dependency I was using and made updates to it to render 

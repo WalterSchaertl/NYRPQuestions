@@ -81,9 +81,13 @@ class GUI(Tk):
         generate_questions.grid(row=10, column=6, columnspan=1, padx=5, pady=5)
 
         # Save edits made to the exam in a _in_progress file
-        save_exam_file = Button(self, text="Save Exam", command=self.save_file)
+        save_exam_file = Button(self, text="Save Exam Text", command=self.save_file)
         save_exam_file.grid(row=10, column=7, columnspan=1, padx=20, pady=5)
         self.exam_filename = None
+
+        # Trigger the final generation of the exam, to be read into the sql db by NYRP
+        submit_questions = Button(self, text="Submit Questions", command=self.submit_questions)
+        submit_questions.grid(row=10, column=8, columnspan=1, padx=20, pady=5)
 
     # TODO is this the right place for this? Might belong in document control
     def save_file(self):
@@ -192,6 +196,32 @@ class GUI(Tk):
             self.pdf_text.insert("sel.last", "</sub>")
         else:
             self.bottom_l.config(text="Unrecognized operation " + operation, fg="red")
+
+    def submit_questions(self):
+        if self.exam is None:
+            self.bottom_l.config(text="An exam must be loaded before it can be finalized", fg="red")
+            return
+        if self.exam.is_valid():
+            self.bottom_l.config(text="Saving valid exam!", fg="green")
+            self.exam.finalize(os.path.join(self.exam.working_dir, "saved_exam.json"))
+        else:
+            self.bottom_l.config(text="Fix exam errors before the exam can be saved", fg="red")
+            # Popup with the invalid questions and their errors
+            win = Toplevel(self)
+            win.title("Questions with errors")
+            error_text_label = tkinter.scrolledtext.ScrolledText(win)
+            error_text_label.pack(expand=True, fill='both', side=tkinter.LEFT)
+            text = ""
+            invalid_qs = self.exam.get_invalid_questions()[1]
+            for q_num in sorted(invalid_qs):
+                text += str(q_num) + "\n"
+                for error in self.exam.get_question(q_num).get_validation_errors():
+                    text += "  " + error + "\n"
+            error_text_label.insert("1.0", text)
+
+            submit_anyway = Button(win, text="Submit Anyways",
+                                   command=lambda: self.exam.finalize(os.path.join(self.exam.working_dir, "saved_exam.json"), True))
+            submit_anyway.pack(expand=True, fill='both', side=tkinter.LEFT)
 
     def file_conversion(self):
         """

@@ -108,8 +108,17 @@ class Question:
             errors.append("Unit is not set")
         if self.question_text is None:
             errors.append("Question text is not set")
+        elif any(fig_key_word in self.question_text.lower() for fig_key_word in [" diagram ", " graph "]) and self.diagram_path is None:
+            errors.append("Question text mentions a diagram but none defined.")
         if None in [self.a, self.b, self.c, self.d]:
             errors.append("A, B, C, and/or option D is not set")
+        for label, text in [("Question", self.question_text), ("A", self.a), ("B", self.b), ("C", self.c), ("D", self.d)]:
+            if text is not None:
+                try:
+                    text.encode('ascii')
+                except UnicodeEncodeError as e:
+                    errors.append("Invalid characters, " + label + ": " + str(text[e.start:e.end]))
+
         return errors
 
     def get_validation_warnings(self) -> list[str]:
@@ -232,13 +241,13 @@ class Exam:
                 invalid_questions.append(question)
         return invalid_questions, [q.number for q in invalid_questions]
 
-    def finalize(self, filepath: str) -> None:
+    def finalize(self, filepath: str, ignore_errors: bool = False) -> None:
         """
         When all questions are formatted correctly, write them out to a JSON file for ingestion in a database later
         """
-        if self.is_valid():
+        if self.is_valid() or ignore_errors:
             with open(filepath, "w") as outf:
-                outf.write(json.dumps(sorted(self.questions.values()), indent=4))
+                outf.write(json.dumps([q.get_as_dict() for q in sorted(self.questions.values())], indent=4))
         else:
             invalid_questions = self.get_invalid_questions()[0]
             if len(invalid_questions) == 0:
