@@ -16,26 +16,34 @@ Python version: 3.9
 ##TODOs
 
 ### Missing Required Functionality
-1. Hyper/Sub script buttons
-2. Save results to JSON and uploading to NYRP project
-3. Popup with which questions could not be generated
+1. Save results to JSON and uploading to NYRP project
+2. Popup with which questions could not be generated
 
 ### Non Required Improvements
-1. When regenerating questions, keep the files/topics from the old questions
-2. Set up keywords for units for autodetection of unit
-3. Add a list to the question of probable errors, even if it parsed correctly. Display these when question is shown. Things like
+1. Set up keywords for units for autodetection of unit
+2. Add a list to the question of probable errors, even if it parsed correctly. Display these when question is shown. Things like
    1. Unicode in the question/answer
    2. Misspelled words (probably missing a space somewhere)
    3. Mentions a figure/diagram/graph and none set for the question
    4. Suspected required super/sub scripts (element symbol preceded/followed by a number)
-4. Project save file for quick resume where it was left off
-5. Undo/Redo operations when editing exam text
-6. Add scroll bar and 'find' to the exam
-7. Jump to question
-8. Add a select unit button
+3. Add 'find' to the exam
+4. Jump to question
 
 ### Other
 1. Replace 'Working All Day'
 2. Increase font size in question render
 3. Jump focus in exam text box and highlight where the question is from
 4. Auto close window to select exams on successful generation, auto trigger Exam creation when text is populated
+
+### tk_html_widgets
+I forked a dependency I was using and made updates to it to render 
+super and sub scripts. The orginal is here: https://github.com/paolo-gurisatti/tk_html_widgets
+my version is here https://github.com/WalterSchaertl/tk_html_widgets, and if
+you want to run this locally and can't live without seeing the super and
+sub scripts working (like me), pull my version, build it, install it.
+1. In the tk_html_widgets
+   1. Create a pyproject.toml (see commit message in that project)
+   2. python -m build
+2. In the NYRPQuestions project
+   1. python -m pip install path_to_tk_html_widgets\tk_html_widgets-0.4.1-py3-none-any.whl --force-reinstall
+

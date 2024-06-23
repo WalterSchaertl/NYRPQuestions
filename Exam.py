@@ -82,16 +82,16 @@ class Question:
             <div class="centered">
                 <table style="margin-left:auto;margin-right:auto;">
                   <tr>
-                    <td><button class="btn" id= "a" >A</button><font color="black" id="a_text">{q_a}</font></td>
+                    <td><button class="btn" id= "a" >A </button><font color="black" id="a_text">{q_a}</font></td>
                   </tr>
                   <tr>
-                    <td><button class="btn" id= "b" >B</button><font color="black" id="b_text">{q_b}</font></td>
+                    <td><button class="btn" id= "b" >B </button><font color="black" id="b_text">{q_b}</font></td>
                   </tr>
                   <tr>
-                    <td><button class="btn" id= "c" >C</button><font color="black" id="c_text">{q_c}</font></td>
+                    <td><button class="btn" id= "c" >C </button><font color="black" id="c_text">{q_c}</font></td>
                   </tr>
                   <tr>
-                    <td><button class="btn" id= "d" >D</button><font color="black" id="d_text">{q_d}</font></td>
+                    <td><button class="btn" id= "d" >D </button><font color="black" id="d_text">{q_d}</font></td>
                   </tr>
                 </table>
             </div> 

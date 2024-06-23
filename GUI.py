@@ -8,7 +8,9 @@ from typing import Optional
 
 import DocumentControl
 import Exam
-from tkhtmlview import HTMLLabel
+# Custom fork to support super and sub scripts, if you want to run this yourself, changing the package to tkhtmlview
+# will support everything but those tags.
+from tk_html_widgets import HTMLLabel
 from pynput import mouse
 from PIL import ImageGrab
 
@@ -34,9 +36,8 @@ class GUI(Tk):
         self.doc_control = None
 
         # text view of the test
-        self.text_of_exam = "<Load an exam to populate this text box>"
         self.pdf_text = tkinter.scrolledtext.ScrolledText(self, undo=True)
-        self.pdf_text.insert(END, self.text_of_exam)
+        self.pdf_text.insert(END,  "<Load an exam to populate this text box>")
         self.pdf_text.grid(row=1, rowspan=9, column=6, columnspan=5, padx=20, pady=5, sticky="nsew")
 
         # Load/finish buttons
@@ -59,9 +60,8 @@ class GUI(Tk):
         prev_q = Button(button_frame, text="Previous", command=self.previous_question)
         upload_pic = Button(button_frame, text="Delete Diagram", command=self.delete_diagram)
         take_pic = Button(button_frame, text="Capture Diagram", command=self.get_diagram)
-        hyper = Button(button_frame, text="Hyperscript")
-        sub = Button(button_frame, text="Subscript")
-        # TODO instead of a button to save, maybe auto save on next/previous and just have a button to clear?
+        hyper = Button(button_frame, text="Superscript", command=lambda: self.sub_super_script("super"))
+        sub = Button(button_frame, text="Subscript", command=lambda: self.sub_super_script("sub"))
         save_unit = Button(button_frame, text="Set Unit", command=self.save_unit_to_question)
         next_q = Button(button_frame, text="Next", command=self.next_question)
         for button in [prev_q, upload_pic, take_pic, self.select_unit, save_unit, hyper, sub, next_q]:
@@ -183,6 +183,16 @@ class GUI(Tk):
         self.exam.get_question(self.current_question).delete_diagram()
         self.render_question()
 
+    def sub_super_script(self, operation):
+        if operation == "super":
+            self.pdf_text.insert("sel.first", "<sup>")
+            self.pdf_text.insert("sel.last", "</sup>")
+        elif operation == "sub":
+            self.pdf_text.insert("sel.first", "<sub>")
+            self.pdf_text.insert("sel.last", "</sub>")
+        else:
+            self.bottom_l.config(text="Unrecognized operation " + operation, fg="red")
+
     def file_conversion(self):
         """
         Pop up window when the user wants to load the exam and answer files.
@@ -215,8 +225,7 @@ class GUI(Tk):
                 # Load the selected files in to Document Control to be parsed, get back the formatted text exam/answers
                 text_exam = self.doc_control.get_conversion(exam_file, "exam")
                 with(open(text_exam, "r")) as infile:
-                    self.text_of_exam = infile.read()
-                    self.pdf_text.insert("1.0", u'{unicode}'.format(unicode=self.text_of_exam))
+                    self.pdf_text.insert("1.0", u'{unicode}'.format(unicode=infile.read()))
                 # TODO this is a hack, find a real solution that doesn't relay on magic names to
                 # determine if an answer text file should really be processed or not
                 text_ans = self.doc_control.get_conversion(ans_file, "ans" if "formatted" not in ans_file else "ans_formatted")
