@@ -27,7 +27,7 @@ class Question:
         self.b = b
         self.c = c
         self.d = d
-        self.e = e
+        self.e = "" if e is None else e
         self.ans = ans
         self.unit_text = unit_text
         self.unit = None if unit_text is None else int(unit_text[0: unit_text.index(":")])
@@ -130,7 +130,7 @@ class Question:
     def set_diagram(self, im: Image) -> None:
         # Set the diagram for the question. If an image is provided, save it to the path and set it. If an image
         # is not given, check to see if one exists at the expected path, set it if it does.
-        possible_diagram = os.path.join(self.exam.working_dir, self.exam.working_dir + "_" + str(self.number) + ".png")
+        possible_diagram = os.path.abspath(os.path.join(self.exam.working_dir, self.exam.working_dir + "_" + str(self.number) + ".png"))
         if im is not None:
             im.save(possible_diagram)
         if os.path.exists(possible_diagram):
@@ -147,7 +147,7 @@ class Question:
 
 
 class Exam:
-    def __init__(self, woring_dir: str, year: str, month: str, subj: str, answer_file: str, num_questions: int = 50):
+    def __init__(self, woring_dir: str, year: int, month: str, subj: str, answer_file: str, num_questions: int = 50):
         self.working_dir = woring_dir
         self.year = year
         self.month = month
@@ -159,11 +159,12 @@ class Exam:
         self.formatted_answer_file = answer_file
 
         # Read in the correct answer, formatted as question_number answer_number unit_number[optional] one per line
+        int_to_letter = {"1": "A", "2": "B", "3": "C", "4": "D"}
         with open(answer_file) as f:
             for line in f.readlines():
                 if line.strip() != "":
                     tup = line.split()
-                    self.answers[int(tup[0])] = int(tup[1])
+                    self.answers[int(tup[0])] = int_to_letter.get(tup[1], tup[1])
                     if len(tup) == 3:
                         self.units[int(tup[0])] = int(tup[2])
 
@@ -247,7 +248,11 @@ class Exam:
         """
         if self.is_valid() or ignore_errors:
             with open(filepath, "w") as outf:
-                outf.write(json.dumps([q.get_as_dict() for q in sorted(self.questions.values())], indent=4))
+                fin_quest = [q.get_as_dict() for q in sorted(self.questions.values())]
+                for q in fin_quest:
+                    del q["number"]
+                    del q["unit_text"]
+                outf.write(json.dumps(fin_quest, indent=4))
         else:
             invalid_questions = self.get_invalid_questions()[0]
             if len(invalid_questions) == 0:
@@ -262,7 +267,7 @@ class Exam:
 
 if __name__ == "__main__":
     working_dir = sys.argv[1]
-    exam = Exam(working_dir, "2024", "Jan", "Chem", working_dir + "\\2024_Jan_chem_exam.txt",
+    exam = Exam(working_dir, 2024, "January", "CHEM", working_dir + "\\2024_Jan_chem_exam.txt",
                 working_dir + "\\2024_Jan_chem_ans_formatted.txt")
     print(len(exam.get_invalid_questions()))
     for question in sorted(exam.get_invalid_questions()[0]):

@@ -17,8 +17,9 @@ SEND_TEMPLATE = {
 DOCUMENT_ROOT = "."  # configure to where you want to store results
 SETTINGS = "config.properties"
 # TODO refactor as enums
-SUPPORTED_SUBJECTS = ["Chem", "Hist", "Alg1"]  # Subjects known to convert correctly
-SUPPORTED_MONTHS = ["Jan","Feb", "Mar", "Apr", "May","Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+SUPPORTED_SUBJECTS = ["CHEM", "USHG", "ALG1"]  # Subjects known to convert correctly
+SUPPORTED_MONTHS = ["January", "February", "March", "April", "May", "June", "July",
+                    "August", "September", "October", "November", "December"]
 
 
 class DocumentControl:
@@ -27,20 +28,20 @@ class DocumentControl:
     Uses www.api2convert.com to do the conversions.
     """
 
-    def __init__(self, year: str, month: str, subject: str):
+    def __init__(self, year: int, month: str, subject: str):
         """
         Given a year/month/subject to make a working directory, calling the convert methods with convert PDFs to text.
         """
         # Param checking
         if subject not in SUPPORTED_SUBJECTS:
             raise Exception(subject + " is not in the list of supported subjects: " + str(SUPPORTED_SUBJECTS))
-        if int(year) < 1990 or int(year) > int(datetime.datetime.now().date().strftime("%Y")):
-            raise Exception("The year " + year + " is invalid, either before 1990 or in the future")
+        if year < 1990 or year > int(datetime.datetime.now().date().strftime("%Y")):
+            raise Exception("The year " + str(year) + " is invalid, either before 1990 or in the future")
         if month not in SUPPORTED_MONTHS:
             raise Exception(month + " is not a valid month, must be one of: " + str(SUPPORTED_MONTHS))
 
         # Make a working directory
-        self.working_dir = os.path.join(DOCUMENT_ROOT, year + "_" + month + "_" + subject)
+        self.working_dir = os.path.join(DOCUMENT_ROOT, str(year) + "_" + month + "_" + subject)
         if not os.path.exists(self.working_dir):
             os.makedirs(self.working_dir)
 
@@ -237,7 +238,7 @@ class DocumentControl:
             is_formatted = True
             for i in range(len(lines)):
                 ques_ans = lines[i].split()
-                if (len(ques_ans) not in [2, 3]) or (ques_ans[0] != str(i + 1)) or (ques_ans[1] not in ["1", "2", "3", "4"]):
+                if (len(ques_ans) not in [2, 3]) or (ques_ans[0] != str(i + 1)) or (ques_ans[1] not in ["A", "B", "C", "D"]):
                     is_formatted = False
         if is_formatted:
             print("Answer key is already formatted! Copying input to output.")

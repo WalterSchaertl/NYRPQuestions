@@ -234,7 +234,7 @@ class GUI(Tk):
             label_to_update.configure(text=filename)
             parent_frame.focus_force()
 
-        def load_files(exam_year: str, exam_month: str, exam_subj: str, exam_file: str, ans_file: str, win: Toplevel) -> None:
+        def load_files(exam_year: int, exam_month: str, exam_subj: str, exam_file: str, ans_file: str, win: Toplevel) -> None:
             self.doc_control = DocumentControl.DocumentControl(exam_year, exam_month, exam_subj)
             # If the local exam file or answer files aren't set, see if we can get them based on the year/month/subject
             base_name = os.path.join(self.doc_control.working_dir, self.doc_control.working_dir + "_")
@@ -317,7 +317,7 @@ class GUI(Tk):
         local_ans.grid(row=6, column=2, columnspan=3, padx=(20, 2), sticky="nsew")
 
         load_local_files = Button(win, text="Load Local Files",
-                                  command=lambda: load_files(str(year.get()), month.get(), subject.get(),
+                                  command=lambda: load_files(year.get(), month.get(), subject.get(),
                                                              local_exam_l.cget("text"), local_ans_l.cget("text"), win))
         load_local_files.grid(row=5, column=10, rowspan=2, sticky="nsew", padx=5, pady=5)
 

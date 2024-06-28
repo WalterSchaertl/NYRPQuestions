@@ -24,6 +24,6 @@ def get_units(subject: str) -> list:
 		return [("0", "Select an Exam to get units")]
 	if subject not in DocumentControl.SUPPORTED_SUBJECTS:
 		return [("0", "Unrecognized unit")]
-	if subject == "Chem":
+	if subject == "CHEM":
 		return CHEM_UNITS
 	return [("0", "Unit not supported yet")]

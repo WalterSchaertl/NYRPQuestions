@@ -25,14 +25,7 @@ Python version: 3.9
 3. Add 'find' to the exam
 4. Jump to question
 5. Fix Question formats for ingestion
-   1. Subject must be all caps
-   2. Saving to output, remove number and unit_text
-   3. Set E to "" instead of None
-   4. Month needs to be the full version
-   5. Year needs to be an int not string
-   6. Answer needs to be A, B, C, or D, not numeric
-   7. Diagram should be a format of "diagrams/{name}" instead of a full path
-   8. Add sub/super scrip shift auto-detect
+6. Add confirmation of exam submitted when submitting with errors
 
 ### Other
 1. Replace 'Working All Day'
