@@ -247,8 +247,6 @@ class GUI(Tk):
                 status_l.config(text="Missing one or more of: year, month, subject, exam file, answer file.", fg="red")
                 status_l.update()
                 return
-            # Save the exam file path
-            self.exam_filename = exam_file
             status_l.config(text="Process started, this make take up to 10 seconds", fg="blue")
             self.update()
             try:
@@ -256,6 +254,8 @@ class GUI(Tk):
                 text_exam = self.doc_control.get_conversion(exam_file, "exam")
                 with(open(text_exam, "r")) as infile:
                     self.pdf_text.insert("1.0", u'{unicode}'.format(unicode=infile.read()))
+                    # Save the exam file path of the local version
+                    self.exam_filename = text_exam
                 # TODO this is a hack, find a real solution that doesn't relay on magic names to
                 # determine if an answer text file should really be processed or not
                 text_ans = self.doc_control.get_conversion(ans_file, "ans" if "formatted" not in ans_file else "ans_formatted")
@@ -335,7 +335,7 @@ class GUI(Tk):
         remote_ans.grid(row=9, column=7, columnspan=3, padx=(20, 2), sticky="nsew")
 
         remote_load_files = Button(win, text="Load Remote Files",
-                                  command=lambda: load_files(str(year.get()), month.get(), subject.get(),
+                                  command=lambda: load_files(year.get(), month.get(), subject.get(),
                                                              remote_exam.get(), remote_ans.get(), win))
         remote_load_files.grid(row=8, column=10, rowspan=2, sticky="nsew", padx=5, pady=5)
 

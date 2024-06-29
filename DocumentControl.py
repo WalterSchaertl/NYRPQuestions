@@ -64,6 +64,7 @@ class DocumentControl:
         is_remote_file = validators.url(uri)
 
         # Given a local text file, no operation needed, copy it to out working directory
+        # Given a local text file, no operation needed, copy it to out working directory
         if not is_remote_file and uri.endswith(".txt"):
             # TODO standardize this name with __save_file
             filename = os.path.join(self.working_dir, self.working_dir + "_" + suffix + ".txt")
@@ -251,7 +252,7 @@ class DocumentControl:
             solutions = list()
             for answer in re.finditer(r"([1-4](\r\n|\r|\n)){50}", infile.read()):
                 if not re.match(r"(1(\r\n|\r|\n)){50}", answer.group()):
-                    solutions = [ans.strip() for ans in answer.group().split()]
+                    solutions = [{1: "A", 2: "B", 3: "C", 4: "D"}[int(ans.strip())] for ans in answer.group().split()]
             if len(solutions) > 0:
                 with open(ans_formatted_txt_file, "w") as outfile:
                     question_number = 1

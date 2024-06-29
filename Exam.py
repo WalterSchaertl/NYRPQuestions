@@ -211,14 +211,18 @@ class Exam:
                 except ValueError:
                     print("Failed to find all answers for question " + str(question_number))
 
+                unit_text = None
                 # First check a previous in-memory version of the test
                 if self.questions.get(question_number) is not None:
                     unit_text = self.questions[question_number].unit_text
                 # Second, look at the answer file when the exam was originally loaded
                 elif self.units.get(question_number) is not None:
                     unit_text = Units.get_units(self.subj)[(self.units.get(question_number))][1]
-                else:
-                    unit_text = None
+                # Third, try to guess the unit if the unit is zero
+                if unit_text is None or "0: None" in unit_text:  # TODO change to enum rather than string
+                    question_and_answers = " {} {} {} {} {} ".format(question_text, opts[1], opts[2], opts[3], opts[4])\
+                        .replace(",", " ").replace(".", " ").replace("?", " ").lower()
+                    unit_text = Units.guess_unit(question_number, self.subj, question_and_answers)
                 self.questions[question_number] = Question(self, question_number, question_text,
                                                            opts[1], opts[2], opts[3], opts[4], None,
                                                            self.answers[question_number], unit_text)
