@@ -26,6 +26,7 @@ Python version: 3.9
 4. Jump to question
 5. Fix Question formats for ingestion
 6. Add confirmation of exam submitted when submitting with errors
+7. Revised way to do hints that includes plurals and punctuation but not partial words. Maybe switch to regex
 
 ### Other
 1. Replace 'Working All Day'

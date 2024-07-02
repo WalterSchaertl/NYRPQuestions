@@ -30,7 +30,7 @@ CHEM_UNIT_KEYWORDS = {
 						" double replacement ", " empirical formula ", " endothermic ", " exothermic ", " qualitative ",
 						" formula ", " quantitative ", " molecular formula ", " reactant ", " molecule ", " single replacement ",
 						" physical change ", " subscript ", " polyatomic ion ", " symbol ", " product ", " synthesis "],
-	CHEM_UNITS[3][0]: [" formula mass ", " mole ", " gram formula mass ", " percentage composition "],
+	CHEM_UNITS[3][0]: [" formula mass ", " mole ", " gram formula mass ", " percentage composition ", " moles "],
 	CHEM_UNITS[4][0]: [" condensation ", " deposition ", " freezing ", " fusion ", " gaseous phase ", " heat ",
 						" solid phase ", " heat of fusion ", " sublimation ", " heat of vaporization ", " temperature ",
 						" kinetic molecular theory ", " vaporization ", " liquid phase "],

@@ -43,7 +43,7 @@ class GUI(Tk):
         # Load/finish buttons
         load_file = Button(self, text="Load File", command=self.file_conversion)
         load_file.grid(column=0, row=0, sticky="nsew", padx=20, pady=5)
-        finish = Button(self, text="Finish")
+        finish = Button(self, text="Finish", command=self.save_and_exit)
         finish.grid(column=10, row=0, sticky="nsew", padx=20, pady=5)
 
         # Rendered question
@@ -88,6 +88,10 @@ class GUI(Tk):
         # Trigger the final generation of the exam, to be read into the sql db by NYRP
         submit_questions = Button(self, text="Submit Questions", command=self.submit_questions)
         submit_questions.grid(row=10, column=8, columnspan=1, padx=20, pady=5)
+
+    def save_and_exit(self):
+        self.save_file()
+        self.destroy()
 
     # TODO is this the right place for this? Might belong in document control
     def save_file(self):
