@@ -79,20 +79,21 @@ def guess_unit(quest_num: int, subject: str, question_and_answers: str) -> str:
 	if subject == "CHEM":
 		best_score = 0
 		best_unit = 0
-		print(quest_num)
+		# print(quest_num)
 		for unit in range(len(CHEM_UNITS)):
-			print("\tUnit" + str(unit))
+			# print("\tUnit" + str(unit))
 			unit_score = 0
 			for keyword in CHEM_UNIT_KEYWORDS[str(unit)]:
 				count = question_and_answers.count(keyword)
 				unit_score += count
-				if count > 0:
-					print("\t\t" + keyword + ": " + str(count))
+				# if count > 0:
+					# print("\t\t" + keyword + ": " + str(count))
 			if unit_score > best_score:
 				best_score = unit_score
 				best_unit = unit
-		print("\tBest unit was " + str(best_unit) + " with a score of " + str(best_score))
+		# print("\tBest unit was " + str(best_unit) + " with a score of " + str(best_score))
 		return CHEM_UNITS[best_unit][1]
 	else:
-		print(" Subject not supported ")
+		# print(" Subject not supported ")
+		# print(" Subject not supported ")
 		return CHEM_UNITS[0][1]

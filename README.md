@@ -27,7 +27,10 @@ Python version: 3.9
 5. Fix Question formats for ingestion
 6. Add confirmation of exam submitted when submitting with errors
 7. Revised way to do hints that includes plurals and punctuation but not partial words. Maybe switch to regex
-
+8. Chem exam improvements
+   1. replace "â†’" with "->"
+   2. " 1 " replace with " + "
+   3. Detect subscripts within lines, letter followed by 1 or more numbers then space or paren
 ### Other
 1. Replace 'Working All Day'
 2. Increase font size in question render

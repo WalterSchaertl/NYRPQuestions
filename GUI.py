@@ -154,9 +154,16 @@ class GUI(Tk):
         if self.exam is None:
             self.bottom_l.config(text="An exam must be loaded before questions can be generated", fg="red")
             return
-        self.exam.generate_questions_from_text(self.pdf_text.get("1.0", "end-1c").splitlines())
+        errors = self.exam.generate_questions_from_text(self.pdf_text.get("1.0", "end-1c").splitlines())
         self.render_question()
         self.bottom_l.config(text="Questions rendered!", fg="green")
+        if len(errors) > 0:
+            # Popup with the exam loading failures
+            win = Toplevel(self)
+            win.title("Errors in question generation")
+            error_text_label = tkinter.scrolledtext.ScrolledText(win)
+            error_text_label.pack(expand=True, fill='both', side=tkinter.LEFT)
+            error_text_label.insert("1.0", "\n".join(sorted(errors)))
 
     def get_diagram(self):
         if self.exam is None:
@@ -223,9 +230,13 @@ class GUI(Tk):
                     text += "  " + error + "\n"
             error_text_label.insert("1.0", text)
 
-            submit_anyway = Button(win, text="Submit Anyways",
-                                   command=lambda: self.exam.finalize(os.path.join(self.exam.working_dir, "saved_exam.json"), True))
+            submit_anyway = Button(win, text="Submit Anyways", command=lambda: self.submit_anyways(win))
             submit_anyway.pack(expand=True, fill='both', side=tkinter.LEFT)
+
+    def submit_anyways(self, win):
+        self.exam.finalize(os.path.join(self.exam.working_dir, "saved_exam.json"), True)
+        self.bottom_l.config(text="Saving invalid exam!", fg="blue")
+        win.destroy()
 
     def file_conversion(self):
         """
@@ -257,6 +268,7 @@ class GUI(Tk):
                 # Load the selected files in to Document Control to be parsed, get back the formatted text exam/answers
                 text_exam = self.doc_control.get_conversion(exam_file, "exam")
                 with(open(text_exam, "r")) as infile:
+                    self.pdf_text.delete("1.0", END)
                     self.pdf_text.insert("1.0", u'{unicode}'.format(unicode=infile.read()))
                     # Save the exam file path of the local version
                     self.exam_filename = text_exam

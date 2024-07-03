@@ -174,13 +174,15 @@ class Exam:
         else:
             raise TypeError("Only exams can be compared to each other")
 
-    def generate_questions_from_file(self, questions_file: str):
+    def generate_questions_from_file(self, questions_file: str) -> set:
         # Read in and parse the exam
         with open(questions_file) as f:
             lines = f.readlines()
-        self.generate_questions_from_text(lines)
+        return self.generate_questions_from_text(lines)
 
-    def generate_questions_from_text(self, lines: list):
+    def generate_questions_from_text(self, lines: list) -> set:
+        errors = set()
+        found_questions = set()
         for i in range(len(lines)):
             # Search for the start of a question
             match = re.compile(r"^\d+ ").match(lines[i])
@@ -209,7 +211,7 @@ class Exam:
                         end = indexes[j + 1] if j + 1 < 4 else -1
                         opts[answer_num] = question_block[start:end].replace("\n", " ").strip()[4:]
                 except ValueError:
-                    print("Failed to find all answers for question " + str(question_number))
+                    errors.add("Failed to find all answers for question " + str(question_number))
 
                 unit_text = None
                 # First check a previous in-memory version of the test
@@ -223,6 +225,10 @@ class Exam:
                     question_and_answers = " {} {} {} {} {} ".format(question_text, opts[1], opts[2], opts[3], opts[4])\
                         .replace(",", " ").replace(".", " ").replace("?", " ").lower()
                     unit_text = Units.guess_unit(question_number, self.subj, question_and_answers)
+                # Check to see if we already found this question this round
+                if question_number in found_questions:
+                    errors.add("Found multiple question candidates for #" + str(question_number))
+                found_questions.add(question_number)
                 self.questions[question_number] = Question(self, question_number, question_text,
                                                            opts[1], opts[2], opts[3], opts[4], None,
                                                            self.answers[question_number], unit_text)
@@ -230,6 +236,11 @@ class Exam:
         for i in range(self.num_questions):
             if i + 1 not in self.questions:
                 self.questions[i + 1] = Question(self, i + 1, None, None, None, None, None, None, self.answers[i + 1], None)
+
+        for error in errors:
+            print(error)
+        # Return the errors
+        return errors
 
     def is_valid(self) -> bool:
         questions_valid = len(self.get_invalid_questions()) == 0 and len(self.questions) == self.num_questions
