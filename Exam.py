@@ -186,7 +186,7 @@ class Exam:
         for i in range(len(lines)):
             # Search for the start of a question
             match = re.compile(r"^\d+ ").match(lines[i])
-            if match is not None and int(match.group(0)) <= 50:
+            if match is not None and 0 < int(match.group(0)) <= 50:
                 question_number = int(match.group(0))
                 # Start of a question and answers (trim its number) and don't end until the next question
                 # is found or the end of the file

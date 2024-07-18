@@ -250,6 +250,13 @@ class GUI(Tk):
             parent_frame.focus_force()
 
         def load_files(exam_year: int, exam_month: str, exam_subj: str, exam_file: str, ans_file: str, win: Toplevel) -> None:
+            # User checking that the year/month/subject don't match the exam and answer file names
+            if ans_file != "" and exam_file != "":
+                for check_in in [str(x).lower() for x in [exam_year, exam_month, exam_subj]]:
+                    if check_in not in exam_file.lower() or check_in not in ans_file.lower():
+                        status_l.config(text="Year, month, and/or subject not in both answer and exam filename.", fg="red")
+                        status_l.update()
+                        return
             self.doc_control = DocumentControl.DocumentControl(exam_year, exam_month, exam_subj)
             # If the local exam file or answer files aren't set, see if we can get them based on the year/month/subject
             base_name = os.path.join(self.doc_control.working_dir, self.doc_control.working_dir + "_")
@@ -267,9 +274,10 @@ class GUI(Tk):
             try:
                 # Load the selected files in to Document Control to be parsed, get back the formatted text exam/answers
                 text_exam = self.doc_control.get_conversion(exam_file, "exam")
-                with(open(text_exam, "r")) as infile:
+                with(open(text_exam, "rb")) as infile:
                     self.pdf_text.delete("1.0", END)
-                    self.pdf_text.insert("1.0", u'{unicode}'.format(unicode=infile.read()))
+                    lines = infile.read().decode('utf-8', 'ignore').encode("utf-8")
+                    self.pdf_text.insert("1.0", lines)
                     # Save the exam file path of the local version
                     self.exam_filename = text_exam
                 # TODO this is a hack, find a real solution that doesn't relay on magic names to
