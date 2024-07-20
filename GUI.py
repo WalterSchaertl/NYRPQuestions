@@ -100,14 +100,17 @@ class GUI(Tk):
             saved_exam_file = self.exam_filename[0: self.exam_filename.rfind(".")]
             if not saved_exam_file.endswith("_in_progress"):
                 saved_exam_file += "_in_progress"
-            with open(saved_exam_file + ".txt", "w") as outex:
-                outex.write(self.pdf_text.get(1.0, "end-1c"))
-            self.bottom_l.config(text="Exam saved!", fg="green")
-            with open(self.exam.formatted_answer_file, "w") as outa:
-                for i in range(1, self.exam.num_questions + 1):
-                    quest = self.exam.get_question(i)
-                    unit = quest.unit if quest.unit is not None else ""
-                    outa.write(str(i) + " " + str(quest.ans) + " " + str(unit) + "\n")
+            try:
+                with open(saved_exam_file + ".txt", "w", encoding="utf-8") as outex:
+                    outex.write(self.pdf_text.get(1.0, "end-1c"))
+                self.bottom_l.config(text="Exam saved!", fg="green")
+                with open(self.exam.formatted_answer_file, "w") as outa:
+                    for i in range(1, self.exam.num_questions + 1):
+                        quest = self.exam.get_question(i)
+                        unit = quest.unit if quest.unit is not None else ""
+                        outa.write(str(i) + " " + str(quest.ans) + " " + str(unit) + "\n")
+            except UnicodeEncodeError as e:
+                self.bottom_l.config(text="Failed to save file: " + str(e), fg="red")
         else:
             self.bottom_l.config(text="No Exam loaded to save", fg="red")
 
@@ -274,10 +277,9 @@ class GUI(Tk):
             try:
                 # Load the selected files in to Document Control to be parsed, get back the formatted text exam/answers
                 text_exam = self.doc_control.get_conversion(exam_file, "exam")
-                with(open(text_exam, "rb")) as infile:
+                with(open(text_exam, "r", errors="replace")) as infile:
                     self.pdf_text.delete("1.0", END)
-                    lines = infile.read().decode('utf-8', 'ignore').encode("utf-8")
-                    self.pdf_text.insert("1.0", lines)
+                    self.pdf_text.insert("1.0", infile.read())
                     # Save the exam file path of the local version
                     self.exam_filename = text_exam
                 # TODO this is a hack, find a real solution that doesn't relay on magic names to

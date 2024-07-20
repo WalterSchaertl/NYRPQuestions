@@ -117,7 +117,8 @@ class Question:
                 try:
                     text.encode('ascii')
                 except UnicodeEncodeError as e:
-                    errors.append("Invalid characters, " + label + ": " + str(text[e.start:e.end]))
+                    errors.append("Invalid characters in " + label + ": '" + str(text[e.start:e.end])
+                                  + "' at position " + str(e.start) + " to " + str(e.end))
 
         return errors
 
