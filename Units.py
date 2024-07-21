@@ -17,6 +17,18 @@ CHEM_UNITS = [
 	("11", "11: Organic Chemistry"),
 	("12", "12: Nuclear Chemistry"),
 ]
+USHG_UNITS = [
+	("0", "0: None"),
+	("1", "1: 1491–1607"),  # Native Americans and early explorers (Columbus to Jamestown start)
+	("2", "2: 1607–1754"),  # New world colonies of European countries (Jamestown to French and Indian War)
+	("3", "3: 1754–1800"),  # American Revolution and early republic (french and india war to Jefferson's 1st term)
+	("4", "4: 1800–1848"),  # Early American developments, 2nd great awakening (Jefferson to civil war)
+	("5", "5: 1844–1877"),  # Civil war, prelude, war, reconstruction
+	("6", "6: 1865–1898"),  # Gilded age (civil war to spanish american war)
+	("7", "7: 1890–1945"),  # Grown as a super power (post Spanish-American war to end of WW2)
+	("8", "8: 1945–1980"),  # Post war era, cold war, civil rights (end of WW2 to Regan)
+	("9", "9: 1980–Present"),  # Modern america
+]
 # TODO it would be awesome to do some k means clustering with all previous exam questions to determine a
 # new question distance to the known groups, and return the most likely group and a measure of confidence.
 # For now we'll use the key vocabulary words and the highest count gets it
@@ -68,10 +80,12 @@ CHEM_UNIT_KEYWORDS = {
 def get_units(subject: str) -> list:
 	if subject is None:
 		return [("0", "Select an Exam to get units")]
-	if subject not in DocumentControl.SUPPORTED_SUBJECTS:
+	elif subject not in DocumentControl.SUPPORTED_SUBJECTS:
 		return [("0", "Unrecognized unit")]
-	if subject == "CHEM":
+	elif subject == "CHEM":
 		return CHEM_UNITS
+	elif subject == "USHG":
+		return USHG_UNITS
 	return [("0", "Unit not supported yet")]
 
 

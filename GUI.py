@@ -254,7 +254,7 @@ class GUI(Tk):
 
         def load_files(exam_year: int, exam_month: str, exam_subj: str, exam_file: str, ans_file: str, win: Toplevel) -> None:
             # User checking that the year/month/subject don't match the exam and answer file names
-            if ans_file != "" and exam_file != "":
+            if ans_file != "" and exam_file != "" and "http" not in ans_file and "http" not in exam_file:
                 for check_in in [str(x).lower() for x in [exam_year, exam_month, exam_subj]]:
                     if check_in not in exam_file.lower() or check_in not in ans_file.lower():
                         status_l.config(text="Year, month, and/or subject not in both answer and exam filename.", fg="red")
@@ -285,7 +285,7 @@ class GUI(Tk):
                 # TODO this is a hack, find a real solution that doesn't relay on magic names to
                 # determine if an answer text file should really be processed or not
                 text_ans = self.doc_control.get_conversion(ans_file, "ans" if "formatted" not in ans_file else "ans_formatted")
-                text_ans_formatted = self.doc_control.reformat_answer_key(text_ans)
+                text_ans_formatted = self.doc_control.reformat_answer_key(text_ans, exam_subj)
                 # Load it into the exam and let the user edit the text box before making questions.
                 self.exam = Exam.Exam(self.doc_control.working_dir, exam_year, exam_month, exam_subj, text_ans_formatted)
                 # Auto create questions and close window

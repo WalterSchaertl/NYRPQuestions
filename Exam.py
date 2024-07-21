@@ -6,6 +6,7 @@ import sys
 from typing import Optional
 from PIL import Image
 
+import DocumentControl
 import Units
 
 
@@ -148,14 +149,14 @@ class Question:
 
 
 class Exam:
-    def __init__(self, woring_dir: str, year: int, month: str, subj: str, answer_file: str, num_questions: int = 50):
+    def __init__(self, woring_dir: str, year: int, month: str, subj: str, answer_file: str, num_questions: int = None):
         self.working_dir = woring_dir
         self.year = year
         self.month = month
         self.subj = subj
         self.answers = dict()
         self.units = dict()
-        self.num_questions = num_questions
+        self.num_questions = num_questions if num_questions is not None else DocumentControl.QUESTION_PER_SUBJECT[subj]
         self.questions = dict()
         self.formatted_answer_file = answer_file
 
@@ -187,7 +188,7 @@ class Exam:
         for i in range(len(lines)):
             # Search for the start of a question
             match = re.compile(r"^\d+ ").match(lines[i])
-            if match is not None and 0 < int(match.group(0)) <= 50:
+            if match is not None and 0 < int(match.group(0)) <= self.num_questions:
                 question_number = int(match.group(0))
                 # Start of a question and answers (trim its number) and don't end until the next question
                 # is found or the end of the file
@@ -244,7 +245,7 @@ class Exam:
         return errors
 
     def is_valid(self) -> bool:
-        questions_valid = len(self.get_invalid_questions()) == 0 and len(self.questions) == self.num_questions
+        questions_valid = len(self.get_invalid_questions()[0]) == 0 and len(self.questions) == self.num_questions
         exam_valid = None not in [self.year, self.month, self.subj]
         return questions_valid and exam_valid
 

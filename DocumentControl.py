@@ -20,6 +20,8 @@ SETTINGS = "config.properties"
 SUPPORTED_SUBJECTS = ["CHEM", "USHG", "ALG1"]  # Subjects known to convert correctly
 SUPPORTED_MONTHS = ["January", "February", "March", "April", "May", "June", "July",
                     "August", "September", "October", "November", "December"]
+# TODO this is better than assuming 50, but if including historical exams this will also change by year
+QUESTION_PER_SUBJECT = {"CHEM": 50, "USHG": 28}
 
 
 class DocumentControl:
@@ -224,10 +226,10 @@ class DocumentControl:
             time.sleep(5)
             return __do_action()
 
-    def reformat_answer_key(self, ans_key_file) -> str:
+    def reformat_answer_key(self, ans_key_file, subject: str) -> str:
         """
-        Given a text answer file converted from a PDF, find the answers and write a formatted answer file of just those
-        Assumes 50 questions. Returns the answer file.
+        Given a text answer file converted from a PDF, find the answers and write a formatted answer file of just those.
+        Returns the answer file.
         """
         ans_formatted_txt_file = os.path.join(self.working_dir, self.working_dir + "_ans_formatted.txt")
         print("Reformatting the answer key for file " + str(ans_key_file) + ", saving to " + ans_formatted_txt_file)
@@ -248,10 +250,10 @@ class DocumentControl:
             return ans_formatted_txt_file
 
         with open(ans_key_file, "r") as infile:
-            # seek through the file looking for a group of 50 lines with numbers 1-4 on them, but not all 1s
+            # seek through the file looking for a group of lines with numbers 1-4 on them, but not all 1s
             solutions = list()
-            for answer in re.finditer(r"([1-4](\r\n|\r|\n)){50}", infile.read()):
-                if not re.match(r"(1(\r\n|\r|\n)){50}", answer.group()):
+            for answer in re.finditer(r"([1-4](\r\n|\r|\n)){" + str(QUESTION_PER_SUBJECT[subject]) + "}", infile.read()):
+                if not re.match(r"(1(\r\n|\r|\n)){" + str(QUESTION_PER_SUBJECT[subject]) + "}", answer.group()):
                     solutions = [{1: "A", 2: "B", 3: "C", 4: "D"}[int(ans.strip())] for ans in answer.group().split()]
             if len(solutions) > 0:
                 with open(ans_formatted_txt_file, "w") as outfile:
