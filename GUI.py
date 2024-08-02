@@ -277,7 +277,7 @@ class GUI(Tk):
             try:
                 # Load the selected files in to Document Control to be parsed, get back the formatted text exam/answers
                 text_exam = self.doc_control.get_conversion(exam_file, "exam")
-                with(open(text_exam, "r", errors="replace")) as infile:
+                with(open(text_exam, "r", encoding='utf-8', errors="replace")) as infile:
                     self.pdf_text.delete("1.0", END)
                     self.pdf_text.insert("1.0", infile.read())
                     # Save the exam file path of the local version

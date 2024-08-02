@@ -37,7 +37,7 @@ CHEM_UNIT_KEYWORDS = {
 	CHEM_UNITS[1][0]: [" atom ", " atomic mass ", " atomic mass unit ", " atomic number ", " compound ", " electron ",
 						" element ", " excited state ", " neutron ", " ground state ", " nucleus ", " heterogeneous ",
 						" orbital ", " homogeneous ", " proton ", " isotope ", " pure substance ", " mass number ",
-						" valence ", " wave-mechanical model ", " spectra ", " substance ", " isotopes "],
+						" valence ", " wave-mechanical model ", " spectra ", " substance ", " isotopes "],  # MIXTURES AND COMPOUNDS
 	CHEM_UNITS[2][0]: [" analysis ", " chemical change ", " coefficient ", " decomposition ", " diatomic molecule ",
 						" double replacement ", " empirical formula ", " endothermic ", " exothermic ", " qualitative ",
 						" formula ", " quantitative ", " molecular formula ", " reactant ", " molecule ", " single replacement ",
@@ -48,7 +48,7 @@ CHEM_UNIT_KEYWORDS = {
 						" kinetic molecular theory ", " vaporization ", " liquid phase "],
 	CHEM_UNITS[5][0]: [" atomic radius ", " electronegativity ", " family ", " group ", " periodic table ",
 						" ionic radius ", " noble gas ", " ionization energy ", " nonmetal ", " metal ",
-						" periodic law ", " metalloid ", " period "],
+						" periodic law ", " metalloid ", " period ", " ionic radius "],
 	CHEM_UNITS[6][0]: [" asymmetrical molecule ", " covalent bond ", " dipole-dipole forces ", " double covalent bond ",
 						" hydrogen bond ", " ion ", " ionic bond ", " nonpolar covalent bond ", " lewis dot diagram ",
 						" octet ", " london dispersion forces ", " octet rule ", " malleability ",

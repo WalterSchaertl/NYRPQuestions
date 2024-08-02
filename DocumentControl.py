@@ -66,7 +66,6 @@ class DocumentControl:
         is_remote_file = validators.url(uri)
 
         # Given a local text file, no operation needed, copy it to out working directory
-        # Given a local text file, no operation needed, copy it to out working directory
         if not is_remote_file and uri.endswith(".txt"):
             # TODO standardize this name with __save_file
             filename = os.path.join(self.working_dir, self.working_dir + "_" + suffix + ".txt")
