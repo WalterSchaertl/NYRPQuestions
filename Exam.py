@@ -183,6 +183,14 @@ class Exam:
         return self.generate_questions_from_text(lines)
 
     def generate_questions_from_text(self, lines: list) -> set:
+        # If there is a file that maps the NYRP units to our units, read it and store it in memoery, use later
+        units = dict()
+        nyrp_unit_file = os.path.join(self.working_dir, self.working_dir + "_guide.txt")
+        if os.path.exists(nyrp_unit_file):
+            with open(nyrp_unit_file, "r") as unit_file_in:
+                for line in unit_file_in:
+                    q, u = line.split()
+                    units[int(q)] = u
         errors = set()
         found_questions = set()
         for i in range(len(lines)):
@@ -222,8 +230,11 @@ class Exam:
                 # Second, look at the answer file when the exam was originally loaded
                 elif self.units.get(question_number) is not None:
                     unit_text = Units.get_units(self.subj)[(self.units.get(question_number))][1]
-                # Third, try to guess the unit if the unit is zero
-                if unit_text is None or "0: None" in unit_text:  # TODO change to enum rather than string
+                # Third, Check to see if we read in the unit file
+                elif units.get(question_number) is not None:
+                    unit_text = Units.guess_unit(question_number, self.subj, units.get(question_number))
+                # Fourth, try to guess the unit if the unit is zero
+                elif unit_text is None or "0: None" in unit_text:  # TODO change to enum rather than string
                     question_and_answers = " {} {} {} {} {} ".format(question_text, opts[1], opts[2], opts[3], opts[4])\
                         .replace(",", " ").replace(".", " ").replace("?", " ").lower()
                     unit_text = Units.guess_unit(question_number, self.subj, question_and_answers)

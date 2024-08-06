@@ -21,7 +21,7 @@ SUPPORTED_SUBJECTS = ["CHEM", "USHG", "ALG1"]  # Subjects known to convert corre
 SUPPORTED_MONTHS = ["January", "February", "March", "April", "May", "June", "July",
                     "August", "September", "October", "November", "December"]
 # TODO this is better than assuming 50, but if including historical exams this will also change by year
-QUESTION_PER_SUBJECT = {"CHEM": 50, "USHG": 28}
+QUESTION_PER_SUBJECT = {"CHEM": 50, "USHG": 28, "ALG1": 24}
 
 
 class DocumentControl:
@@ -235,7 +235,7 @@ class DocumentControl:
 
         # Check to see if the provided file is already formatted, each line must be numbered 1
         # to max num lines, and have an answer of 1 to 4 and optional units
-        with open(ans_key_file, "r") as infile:
+        with open(ans_key_file, "r", encoding='utf-8', errors="replace") as infile:
             lines = infile.readlines()
             is_formatted = True
             for i in range(len(lines)):

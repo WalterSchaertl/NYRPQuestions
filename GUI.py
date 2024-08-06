@@ -279,7 +279,10 @@ class GUI(Tk):
                 text_exam = self.doc_control.get_conversion(exam_file, "exam")
                 with(open(text_exam, "r", encoding='utf-8', errors="replace")) as infile:
                     self.pdf_text.delete("1.0", END)
-                    self.pdf_text.insert("1.0", infile.read())
+                    # Convert less common unicode characters to their ASCII counterparts
+                    transl_table = dict([(ord(x), ord(y)) for x, y in zip(u"‘’´“”–-", u"'''\"\"--")])
+                    clean_text_exam = infile.read().translate(transl_table)
+                    self.pdf_text.insert("1.0", clean_text_exam)
                     # Save the exam file path of the local version
                     self.exam_filename = text_exam
                 # TODO this is a hack, find a real solution that doesn't relay on magic names to

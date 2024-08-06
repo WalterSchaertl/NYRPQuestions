@@ -29,6 +29,30 @@ USHG_UNITS = [
 	("8", "8: 1945–1980"),  # Post war era, cold war, civil rights (end of WW2 to Regan)
 	("9", "9: 1980–Present"),  # Modern america
 ]
+ALG1_UNITS = [
+	("0", "0: None"),  # ex) add 3*x*rad(7) + 2*x*rad(7), rationalize a number
+	# 1) Use properties of rational and irrational numbers.
+	("1", "1: The Real Number System"),
+	# 2) Reason quantitatively and use units to solve problems
+	("2", "2: Quantities"),
+	# 3) Write expressions in equivalent forms to reveal their characteristics.
+	("3", "3: Structure in Expressions"),
+	# 4) Arithmetic operations and zeros/factors of Polynomials
+	("4", "4: Arithmetic with Polynomials and Rational Expressions"),
+	# 5) Create equations that describe numbers or relationships
+	("5", "5: Creating Equations"),
+	# 6) Represent and solve equations/inequalities in one variable, system of equations, equations on a graph
+	("6", "6: Reasoning with Questions and Inequalities"),  # ex) Create an equation passing through 2 points, solve for x in a polynomial
+	# 7) Function notation, functions in context/applications, analyze F() with different representations
+	("7", "7: Interpreting Functions"),
+	# 8) Build a function that models a relationship between two quantities, build new functions from existing functions.
+	("8", "8: Building Functions"),
+	# 9) Construct, compare, and interpret to solve problems
+	("9", "9: Linear, Quadratic, and Exponential Models"),
+	# 10) Single count or measured variables, two categorical and quantitative variables, linear models
+	("10", "10: Interpreting Categorical and Quantitative Data")
+]
+
 # TODO it would be awesome to do some k means clustering with all previous exam questions to determine a
 # new question distance to the known groups, and return the most likely group and a measure of confidence.
 # For now we'll use the key vocabulary words and the highest count gets it
@@ -76,6 +100,20 @@ CHEM_UNIT_KEYWORDS = {
 						" fission ", " natural transmutation "]
 }
 
+ALG1_UNIT_KEYWORDS = {
+	ALG1_UNITS[0][0]: [],
+	ALG1_UNITS[1][0]: ["N-RN"],
+	ALG1_UNITS[2][0]: ["N-Q"],
+	ALG1_UNITS[3][0]: ["A-SSE"],
+	ALG1_UNITS[4][0]: ["A-APR"],
+	ALG1_UNITS[5][0]: ["A-CED"],
+	ALG1_UNITS[6][0]: ["A-REI"],
+	ALG1_UNITS[7][0]: ["F-IF"],
+	ALG1_UNITS[8][0]: ["F-BF"],
+	ALG1_UNITS[9][0]: ["F-LE"],
+	ALG1_UNITS[10][0]: ["S-ID"],
+}
+
 
 def get_units(subject: str) -> list:
 	if subject is None:
@@ -86,10 +124,14 @@ def get_units(subject: str) -> list:
 		return CHEM_UNITS
 	elif subject == "USHG":
 		return USHG_UNITS
+	elif subject == "ALG1":
+		return ALG1_UNITS
 	return [("0", "Unit not supported yet")]
 
 
 def guess_unit(quest_num: int, subject: str, question_and_answers: str) -> str:
+	# Returns the best unit text (second value in the unit tuples) corresponding to the best guessed unit
+	# based on the keywords in the UNIT_KEYWORDS dicts
 	if subject == "CHEM":
 		best_score = 0
 		best_unit = 0
@@ -107,7 +149,11 @@ def guess_unit(quest_num: int, subject: str, question_and_answers: str) -> str:
 				best_unit = unit
 		# print("\tBest unit was " + str(best_unit) + " with a score of " + str(best_score))
 		return CHEM_UNITS[best_unit][1]
+	elif subject == "ALG1":
+		for unit in range(1, len(ALG1_UNITS) + 1):
+			if question_and_answers.strip().startswith(ALG1_UNIT_KEYWORDS[str(unit)][0]):
+				return ALG1_UNITS[unit][1]
+		return ALG1_UNITS[0][1]
 	else:
-		# print(" Subject not supported ")
-		# print(" Subject not supported ")
-		return CHEM_UNITS[0][1]
+		# TODO this really needs to be a constant
+		return "0: None"
