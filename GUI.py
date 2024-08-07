@@ -60,34 +60,45 @@ class GUI(Tk):
         prev_q = Button(button_frame, text="Previous", command=self.previous_question)
         upload_pic = Button(button_frame, text="Delete Diagram", command=self.delete_diagram)
         take_pic = Button(button_frame, text="Capture Diagram", command=self.get_diagram)
-        hyper = Button(button_frame, text="Superscript", command=lambda: self.sub_super_script("super"))
-        sub = Button(button_frame, text="Subscript", command=lambda: self.sub_super_script("sub"))
+        hyper = Button(button_frame, text="Superscript", command=lambda: self.sub_super_script_rad("super"))
+        sub = Button(button_frame, text="Subscript", command=lambda: self.sub_super_script_rad("sub"))
         save_unit = Button(button_frame, text="Set Unit", command=self.save_unit_to_question)
         next_q = Button(button_frame, text="Next", command=self.next_question)
         for button in [prev_q, upload_pic, take_pic, self.select_unit, save_unit, hyper, sub, next_q]:
             button.pack(expand=True, fill='both', side=tkinter.LEFT)
 
+        # Math formatting buttons
+        math_button_frame = Frame(self, bg="green")
+        math_button_frame.grid(row=8, column=0, columnspan=6, sticky="nsew", padx=20, pady=5)
+        math_char = Button(math_button_frame, text="Convert Chars", command=self.convert_to_from_math)
+        lte = Button(math_button_frame, text="≤", command=lambda: self.pdf_text.insert(self.pdf_text.index(INSERT), "≤"))
+        gte = Button(math_button_frame, text="≥", command=lambda: self.pdf_text.insert(self.pdf_text.index(INSERT), "≥"))
+        times = Button(math_button_frame, text="•", command=lambda: self.pdf_text.insert(self.pdf_text.index(INSERT), "•"))
+        rad = Button(math_button_frame, text="√", command=lambda:self.sub_super_script_rad("rad"))
+        for button in [math_char, lte, gte, times, rad]:
+            button.pack(expand=True, fill='both', side=tkinter.LEFT)
+
         # Question Text
         self.raw_q = Text(self)
         self.raw_q.insert(END, "Just the question layout")
-        self.raw_q.grid(row=8, rowspan=2, column=0, columnspan=6, padx=20, pady=5, sticky="nsew")
+        self.raw_q.grid(row=9, rowspan=2, column=0, columnspan=6, padx=20, pady=5, sticky="nsew")
 
         # Bottom Label
         self.bottom_l = Label(self, text="Working all day")
-        self.bottom_l.grid(row=10, column=0, columnspan=5, padx=5, pady=5)
+        self.bottom_l.grid(row=11, column=0, columnspan=5, padx=5, pady=5)
 
         # Read the Text and make the questions
         generate_questions = Button(self, text="Generate Questions", command=self.create_questions)
-        generate_questions.grid(row=10, column=6, columnspan=1, padx=5, pady=5)
+        generate_questions.grid(row=11, column=6, columnspan=1, padx=5, pady=5)
 
         # Save edits made to the exam in a _in_progress file
         save_exam_file = Button(self, text="Save Exam Text", command=self.save_file)
-        save_exam_file.grid(row=10, column=7, columnspan=1, padx=20, pady=5)
+        save_exam_file.grid(row=11, column=7, columnspan=1, padx=20, pady=5)
         self.exam_filename = None
 
         # Trigger the final generation of the exam, to be read into the sql db by NYRP
         submit_questions = Button(self, text="Submit Questions", command=self.submit_questions)
-        submit_questions.grid(row=10, column=8, columnspan=1, padx=20, pady=5)
+        submit_questions.grid(row=11, column=8, columnspan=1, padx=20, pady=5)
 
     def save_and_exit(self):
         self.save_file()
@@ -201,15 +212,59 @@ class GUI(Tk):
         self.exam.get_question(self.current_question).delete_diagram()
         self.render_question()
 
-    def sub_super_script(self, operation):
+    def sub_super_script_rad(self, operation):
         if operation == "super":
             self.pdf_text.insert("sel.first", "<sup>")
             self.pdf_text.insert("sel.last", "</sup>")
         elif operation == "sub":
             self.pdf_text.insert("sel.first", "<sub>")
             self.pdf_text.insert("sel.last", "</sub>")
+        elif operation == "rad":
+            self.pdf_text.insert("sel.first", "√(")
+            self.pdf_text.insert("sel.last", ")")
         else:
             self.bottom_l.config(text="Unrecognized operation " + operation, fg="red")
+
+    def convert_to_from_math(self):
+        # Within a highlighted area, convert each letter to a math letter (or back from a math letter)
+        # This is showing some issues on Text display and exam ingestion, so for now it's being left
+        # unused and should be an improvement for the future.
+        # Start of the conversion block, minus the offset of normal characters
+        math_upper_start = ord('𝐴')
+        math_lower_start = ord('𝑎')
+        uppercase_offset = math_upper_start - ord('A')
+        lowercase_offset = math_lower_start - ord('a')
+        skip_tag = False
+        # Iterate over all characters in the selection, replace with their math versions
+        chars_to_convert = list(self.pdf_text.get('sel.first', 'sel.last'))
+        for index in range(len(chars_to_convert)):
+            replace_char = chars_to_convert[index]
+            # Skip characters in tags
+            if replace_char == "<":
+                skip_tag = True
+            elif replace_char == ">":
+                skip_tag = False
+                chars_to_convert[index] = replace_char
+                continue
+
+            if skip_tag:
+                chars_to_convert[index] = replace_char
+            # Special case, math h doesn't exist where it 'should'
+            elif replace_char == 'h':
+                chars_to_convert[index] = 'ℎ'
+            elif replace_char == 'ℎ':
+                chars_to_convert[index] = 'h'
+            # Convert uppercase normal to math versions
+            elif ord('A') <= ord(replace_char) <= ord('Z'):
+                chars_to_convert[index] = chr(ord(replace_char) + uppercase_offset)
+            elif ord('a') <= ord(replace_char) <= ord('z'):
+                chars_to_convert[index] = chr(ord(replace_char) + lowercase_offset)
+            # Convert math versions to normal
+            elif math_upper_start <= ord(replace_char) < math_upper_start + 26:
+                chars_to_convert[index] = chr(ord(replace_char) - uppercase_offset)
+            elif math_lower_start <= ord(replace_char) < math_lower_start + 26:
+                chars_to_convert[index] = chr(ord(replace_char) - lowercase_offset)
+        self.pdf_text.replace("sel.first", "sel.last", "".join(chars_to_convert))
 
     def submit_questions(self):
         if self.exam is None:
