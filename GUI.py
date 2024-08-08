@@ -60,8 +60,8 @@ class GUI(Tk):
         prev_q = Button(button_frame, text="Previous", command=self.previous_question)
         upload_pic = Button(button_frame, text="Delete Diagram", command=self.delete_diagram)
         take_pic = Button(button_frame, text="Capture Diagram", command=self.get_diagram)
-        hyper = Button(button_frame, text="Superscript", command=lambda: self.sub_super_script_rad("super"))
-        sub = Button(button_frame, text="Subscript", command=lambda: self.sub_super_script_rad("sub"))
+        hyper = Button(button_frame, text="Superscript", command=lambda: self.format_text("super"))
+        sub = Button(button_frame, text="Subscript", command=lambda: self.format_text("sub"))
         save_unit = Button(button_frame, text="Set Unit", command=self.save_unit_to_question)
         next_q = Button(button_frame, text="Next", command=self.next_question)
         for button in [prev_q, upload_pic, take_pic, self.select_unit, save_unit, hyper, sub, next_q]:
@@ -70,11 +70,11 @@ class GUI(Tk):
         # Math formatting buttons
         math_button_frame = Frame(self, bg="green")
         math_button_frame.grid(row=8, column=0, columnspan=6, sticky="nsew", padx=20, pady=5)
-        math_char = Button(math_button_frame, text="Convert Chars", command=self.convert_to_from_math)
+        math_char = Button(math_button_frame, text="Convert Chars", command=lambda: self.format_text("ital"))
         lte = Button(math_button_frame, text="≤", command=lambda: self.pdf_text.insert(self.pdf_text.index(INSERT), "≤"))
         gte = Button(math_button_frame, text="≥", command=lambda: self.pdf_text.insert(self.pdf_text.index(INSERT), "≥"))
         times = Button(math_button_frame, text="•", command=lambda: self.pdf_text.insert(self.pdf_text.index(INSERT), "•"))
-        rad = Button(math_button_frame, text="√", command=lambda:self.sub_super_script_rad("rad"))
+        rad = Button(math_button_frame, text="√", command=lambda:self.format_text("rad"))
         for button in [math_char, lte, gte, times, rad]:
             button.pack(expand=True, fill='both', side=tkinter.LEFT)
 
@@ -212,7 +212,7 @@ class GUI(Tk):
         self.exam.get_question(self.current_question).delete_diagram()
         self.render_question()
 
-    def sub_super_script_rad(self, operation):
+    def format_text(self, operation):
         if operation == "super":
             self.pdf_text.insert("sel.first", "<sup>")
             self.pdf_text.insert("sel.last", "</sup>")
@@ -222,49 +222,72 @@ class GUI(Tk):
         elif operation == "rad":
             self.pdf_text.insert("sel.first", "√(")
             self.pdf_text.insert("sel.last", ")")
+        elif operation == "ital":
+            # This is far from a perfect solution, it can get confused by lone '>' and '<' thinking they're html tags,
+            # and will tag characters individually tht could be combined, but it still works better than setting italics
+            # for the entire of each selection
+            text = self.pdf_text.get('sel.first', 'sel.last')
+            if "<i>" in text:
+                self.pdf_text.replace("sel.first", "sel.last", text.replace("<i>", "").replace("</i>", ""))
+            else:
+                replace_text = list()
+                skip_tag = False
+                for char in text:
+                    # Skip characters in tags
+                    if char == "<":
+                        skip_tag = True
+                    elif char == ">":
+                        skip_tag = False
+                        replace_text.append(char)
+                        continue
+                    if skip_tag or ord(char) < ord('A') or ord('Z') < ord(char) < ord('a') or ord(char) > ord('z'):
+                        replace_text.append(char)
+                    else:
+                        replace_text.extend([c for c in "<i>" + char + "</i>"])
+                self.pdf_text.replace("sel.first", "sel.last", "".join(replace_text))
         else:
             self.bottom_l.config(text="Unrecognized operation " + operation, fg="red")
 
-    def convert_to_from_math(self):
-        # Within a highlighted area, convert each letter to a math letter (or back from a math letter)
-        # This is showing some issues on Text display and exam ingestion, so for now it's being left
-        # unused and should be an improvement for the future.
-        # Start of the conversion block, minus the offset of normal characters
-        math_upper_start = ord('𝐴')
-        math_lower_start = ord('𝑎')
-        uppercase_offset = math_upper_start - ord('A')
-        lowercase_offset = math_lower_start - ord('a')
-        skip_tag = False
-        # Iterate over all characters in the selection, replace with their math versions
-        chars_to_convert = list(self.pdf_text.get('sel.first', 'sel.last'))
-        for index in range(len(chars_to_convert)):
-            replace_char = chars_to_convert[index]
-            # Skip characters in tags
-            if replace_char == "<":
-                skip_tag = True
-            elif replace_char == ">":
-                skip_tag = False
-                chars_to_convert[index] = replace_char
-                continue
-
-            if skip_tag:
-                chars_to_convert[index] = replace_char
-            # Special case, math h doesn't exist where it 'should'
-            elif replace_char == 'h':
-                chars_to_convert[index] = 'ℎ'
-            elif replace_char == 'ℎ':
-                chars_to_convert[index] = 'h'
-            # Convert uppercase normal to math versions
-            elif ord('A') <= ord(replace_char) <= ord('Z'):
-                chars_to_convert[index] = chr(ord(replace_char) + uppercase_offset)
-            elif ord('a') <= ord(replace_char) <= ord('z'):
-                chars_to_convert[index] = chr(ord(replace_char) + lowercase_offset)
-            # Convert math versions to normal
-            elif math_upper_start <= ord(replace_char) < math_upper_start + 26:
-                chars_to_convert[index] = chr(ord(replace_char) - uppercase_offset)
-            elif math_lower_start <= ord(replace_char) < math_lower_start + 26:
-                chars_to_convert[index] = chr(ord(replace_char) - lowercase_offset)
-        self.pdf_text.replace("sel.first", "sel.last", "".join(chars_to_convert))
+    # def convert_to_from_math(self):
+    #     # Within a highlighted area, convert each letter to a math letter (or back from a math letter)
+    #     # This is showing some issues on Text display and exam ingestion, so for now it's being left
+    #     # unused and should be an improvement for the future.
+    #     # Start of the conversion block, minus the offset of normal characters
+    #     math_upper_start = ord('𝐴')
+    #     math_lower_start = ord('𝑎')
+    #     uppercase_offset = math_upper_start - ord('A')
+    #     lowercase_offset = math_lower_start - ord('a')
+    #     skip_tag = False
+    #     # Iterate over all characters in the selection, replace with their math versions
+    #     chars_to_convert = list(self.pdf_text.get('sel.first', 'sel.last'))
+    #     for index in range(len(chars_to_convert)):
+    #         replace_char = chars_to_convert[index]
+    #         # Skip characters in tags
+    #         if replace_char == "<":
+    #             skip_tag = True
+    #         elif replace_char == ">":
+    #             skip_tag = False
+    #             chars_to_convert[index] = replace_char
+    #             continue
+    #
+    #         if skip_tag:
+    #             chars_to_convert[index] = replace_char
+    #         # Special case, math h doesn't exist where it 'should'
+    #         elif replace_char == 'h':
+    #             chars_to_convert[index] = 'ℎ'
+    #         elif replace_char == 'ℎ':
+    #             chars_to_convert[index] = 'h'
+    #         # Convert uppercase normal to math versions
+    #         elif ord('A') <= ord(replace_char) <= ord('Z'):
+    #             chars_to_convert[index] = chr(ord(replace_char) + uppercase_offset)
+    #         elif ord('a') <= ord(replace_char) <= ord('z'):
+    #             chars_to_convert[index] = chr(ord(replace_char) + lowercase_offset)
+    #         # Convert math versions to normal
+    #         elif math_upper_start <= ord(replace_char) < math_upper_start + 26:
+    #             chars_to_convert[index] = chr(ord(replace_char) - uppercase_offset)
+    #         elif math_lower_start <= ord(replace_char) < math_lower_start + 26:
+    #             chars_to_convert[index] = chr(ord(replace_char) - lowercase_offset)
+    #     self.pdf_text.replace("sel.first", "sel.last", "".join(chars_to_convert))
 
     def submit_questions(self):
         if self.exam is None:
