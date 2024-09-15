@@ -30,7 +30,7 @@ USHG_UNITS = [
 	("9", "9: 1980–Present"),  # Modern america
 ]
 ALG1_UNITS = [
-	("0", "0: None"),  # ex) add 3*x*rad(7) + 2*x*rad(7), rationalize a number
+	("0", "0: None"),
 	# 1) Use properties of rational and irrational numbers.
 	("1", "1: The Real Number System"),
 	# 2) Reason quantitatively and use units to solve problems
@@ -51,6 +51,20 @@ ALG1_UNITS = [
 	("9", "9: Linear, Quadratic, and Exponential Models"),
 	# 10) Single count or measured variables, two categorical and quantitative variables, linear models
 	("10", "10: Interpreting Categorical and Quantitative Data")
+]
+
+GHG2_UNITS = [
+	("0", "0: None"),
+	("1", "1: The World in 1750"),  # 10.1
+	("2", "2: Enlightenment, Revolution, and Nationalism (1750-1914)"),  # 10.2 (1750-1914)
+	("3", "3: Causes and Effects of the Industrial Revolution (1750-1914)"),  # 10.3 (1750-1914)
+	("4", "4: Imperialism (1750-1914)"),  # 10.4 (1750-1914)
+	("5", "5: Unresolved Global Conflict (1914-1945)"),  # 10.5 (1914-1945)
+	("6", "6: Unresolved Global Conflict (1945-1991)"),  # 10.5 (1945-1991)
+	("7", "7: Decolonization and Nationalism (1900-2000)"),  # 10.7 (1900-2000)
+	("8", "8: Tensions Between Traditional Cultures and Modernization (1945-present)"),  # 10.8 (1945-present)
+	("9", "9: Globalization and a Changing Global Environment (1990-present)"),  # 10.9 (1990-present)
+	("10", "10: Human Rights Violations (1933-present)")  # 10.10 (1948-present)
 ]
 
 # TODO it would be awesome to do some k means clustering with all previous exam questions to determine a
@@ -101,7 +115,7 @@ CHEM_UNIT_KEYWORDS = {
 }
 
 ALG1_UNIT_KEYWORDS = {
-	ALG1_UNITS[0][0]: [],
+	ALG1_UNITS[0][0]: ["not_a_thing"],  # todo fix me
 	ALG1_UNITS[1][0]: ["N-RN"],
 	ALG1_UNITS[2][0]: ["N-Q"],
 	ALG1_UNITS[3][0]: ["A-SSE"],
@@ -112,6 +126,20 @@ ALG1_UNIT_KEYWORDS = {
 	ALG1_UNITS[8][0]: ["F-BF"],
 	ALG1_UNITS[9][0]: ["F-LE"],
 	ALG1_UNITS[10][0]: ["S-ID"],
+}
+
+GHG2_UNIT_KEYWORDS = {
+	GHG2_UNITS[0][0]: ["10.0"],
+	GHG2_UNITS[1][0]: ["10.1"],
+	GHG2_UNITS[2][0]: ["10.2"],
+	GHG2_UNITS[3][0]: ["10.3"],
+	GHG2_UNITS[4][0]: ["10.4"],
+	GHG2_UNITS[5][0]: ["10.5"],
+	GHG2_UNITS[6][0]: ["10.6"],
+	GHG2_UNITS[7][0]: ["10.7"],
+	GHG2_UNITS[8][0]: ["10.8"],
+	GHG2_UNITS[9][0]: ["10.9"],
+	GHG2_UNITS[10][0]: ["10.10"],
 }
 
 
@@ -150,10 +178,15 @@ def guess_unit(quest_num: int, subject: str, question_and_answers: str) -> str:
 		# print("\tBest unit was " + str(best_unit) + " with a score of " + str(best_score))
 		return CHEM_UNITS[best_unit][1]
 	elif subject == "ALG1":
-		for unit in range(1, len(ALG1_UNITS) + 1):
-			if question_and_answers.strip().startswith(ALG1_UNIT_KEYWORDS[str(unit)][0]):
+		for unit in range(0, len(ALG1_UNITS)):  # TODO fix this
+			if question_and_answers.strip() == ALG1_UNIT_KEYWORDS[str(unit)][0]:
 				return ALG1_UNITS[unit][1]
 		return ALG1_UNITS[0][1]
+	elif subject == "GHG2":
+		for unit in range(0, len(GHG2_UNITS)):
+			if question_and_answers.strip() == GHG2_UNIT_KEYWORDS[str(unit)][0]:
+				return GHG2_UNITS[unit][1]
+		return GHG2_UNITS[0][1]
 	else:
 		# TODO this really needs to be a constant
 		return "0: None"

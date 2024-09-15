@@ -17,11 +17,11 @@ SEND_TEMPLATE = {
 DOCUMENT_ROOT = "."  # configure to where you want to store results
 SETTINGS = "config.properties"
 # TODO refactor as enums
-SUPPORTED_SUBJECTS = ["CHEM", "USHG", "ALG1"]  # Subjects known to convert correctly
+SUPPORTED_SUBJECTS = ["CHEM", "USHG", "ALG1", "GHG2"]  # Subjects known to convert correctly
 SUPPORTED_MONTHS = ["January", "February", "March", "April", "May", "June", "July",
                     "August", "September", "October", "November", "December"]
 # TODO this is better than assuming 50, but if including historical exams this will also change by year
-QUESTION_PER_SUBJECT = {"CHEM": 50, "USHG": 28, "ALG1": 24}
+QUESTION_PER_SUBJECT = {"CHEM": 50, "USHG": 28, "ALG1": 24, "GHG2": 28}
 
 
 class DocumentControl:
@@ -244,7 +244,7 @@ class DocumentControl:
                     is_formatted = False
         if is_formatted:
             print("Answer key is already formatted! Copying input to output.")
-            if not os.path.samefile(ans_key_file, ans_formatted_txt_file):
+            if not os.path.exists(ans_formatted_txt_file) or not os.path.samefile(ans_key_file, ans_formatted_txt_file):
                 shutil.copy(ans_key_file, ans_formatted_txt_file)
             return ans_formatted_txt_file
 

@@ -17,24 +17,23 @@ Python version: 3.9
 
 
 ### Non Required Improvements
-1. Set up keywords for units for autodetection of unit
-2. Add a list to the question of probable errors, even if it parsed correctly. Display these when question is shown. Things like
+1. Add a list to the question of probable errors, even if it parsed correctly. Display these when question is shown. Things like
    1. Misspelled words (probably missing a space somewhere)
-   2. Mentions a figure/diagram/graph and none set for the question
-   3. Suspected required super/sub scripts (element symbol preceded/followed by a number)
-3. Add 'find' to the exam
-4. Jump to question
-5. Fix Question formats for ingestion
-6. Add confirmation of exam submitted when submitting with errors
-7. Revised way to do hints that includes plurals and punctuation but not partial words. Maybe switch to regex
-8. Chem exam improvements
+   2. Suspected required super/sub scripts (element symbol preceded/followed by a number)
+2. Add 'find' to the exam
+3. Jump to question
+4. Fix Question formats for ingestion
+5. Revised way to do hints that includes plurals and punctuation but not partial words. Maybe switch to regex
+6. Chem exam improvements
    1. replace "â†’" with "->"
    2. " 1 " replace with " + "
    3. Detect subscripts within lines, letter followed by 1 or more numbers then space or paren
+7. Fix exam reading so functions aren't read as answers. ie '(1) f(2) = 3' is supposed to mean answer #1 is 'f(2) = 3', but it gets parsed as the answer to #1 is f, and the answer to #2 is '=3'
+8. So many TODO items that should be addressed.
+
 ### Other
 1. Replace 'Working All Day'
-2. Increase font size in question render
-3. Jump focus in exam text box and highlight where the question is from
+2. Jump focus in exam text box and highlight where the question is from
 
 ### tk_html_widgets
 I forked a dependency I was using and made updates to it to render 

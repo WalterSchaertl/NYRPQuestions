@@ -38,7 +38,7 @@ class GUI(Tk):
         # text view of the test
         self.pdf_text = tkinter.scrolledtext.ScrolledText(self, undo=True)
         self.pdf_text.insert(END,  "<Load an exam to populate this text box>")
-        self.pdf_text.grid(row=1, rowspan=9, column=6, columnspan=5, padx=20, pady=5, sticky="nsew")
+        self.pdf_text.grid(row=1, rowspan=10, column=6, columnspan=5, padx=20, pady=5, sticky="nsew")
 
         # Load/finish buttons
         load_file = Button(self, text="Load File", command=self.file_conversion)
