@@ -154,6 +154,8 @@ def get_units(subject: str) -> list:
 		return USHG_UNITS
 	elif subject == "ALG1":
 		return ALG1_UNITS
+	elif subject == "GHG2":
+		return GHG2_UNITS
 	return [("0", "Unit not supported yet")]
 
 

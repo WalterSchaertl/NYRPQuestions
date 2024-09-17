@@ -304,11 +304,15 @@ class GUI(Tk):
             error_text_label = tkinter.scrolledtext.ScrolledText(win)
             error_text_label.pack(expand=True, fill='both', side=tkinter.LEFT)
             text = ""
-            invalid_qs = self.exam.get_invalid_questions()[1]
-            for q_num in sorted(invalid_qs):
-                text += str(q_num) + "\n"
-                for error in self.exam.get_question(q_num).get_validation_errors():
+            for q in sorted(self.exam.get_invalid_questions(), key=lambda q: q.number):
+                text += str(q.number) + "\n"
+                errors = q.get_validation_errors()
+                # Question is flagged as invalid, but no errors for it
+                if len(errors) == 0:
+                    errors.append("Question has the same question text as another question")
+                for error in errors:
                     text += "  " + error + "\n"
+
             error_text_label.insert("1.0", text)
 
             submit_anyway = Button(win, text="Submit Anyways", command=lambda: self.submit_anyways(win))

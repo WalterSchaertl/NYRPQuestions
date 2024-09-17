@@ -256,19 +256,22 @@ class Exam:
         return errors
 
     def is_valid(self) -> bool:
-        questions_valid = len(self.get_invalid_questions()[0]) == 0 and len(self.questions) == self.num_questions
+        questions_valid = len(self.get_invalid_questions()) == 0 and len(self.questions) == self.num_questions
         exam_valid = None not in [self.year, self.month, self.subj]
         return questions_valid and exam_valid
 
-    def get_invalid_questions(self) -> (list, list):
+    def get_invalid_questions(self) -> list:
         """
-        Returns a tuple, first is a list of invalid questions, second is the question numbers
+        Returns a list of invalid questions
         """
         invalid_questions = list()
+        valid_questions_text = set()
         for _, question in self.questions.items():
-            if len(question.get_validation_errors()) > 0:
+            if len(question.get_validation_errors()) > 0 or question.question_text in valid_questions_text:
                 invalid_questions.append(question)
-        return invalid_questions, [q.number for q in invalid_questions]
+            else:
+                valid_questions_text.add(question.question_text)
+        return invalid_questions
 
     def finalize(self, filepath: str, ignore_errors: bool = False) -> None:
         """
@@ -282,7 +285,7 @@ class Exam:
                     del q["unit_text"]
                 outf.write(json.dumps(fin_quest, indent=4))
         else:
-            invalid_questions = self.get_invalid_questions()[0]
+            invalid_questions = self.get_invalid_questions()
             if len(invalid_questions) == 0:
                 raise Exception("Questions are valid, but the exam is not, check year/month/subject are set")
             else:
@@ -298,5 +301,5 @@ if __name__ == "__main__":
     exam = Exam(working_dir, 2024, "January", "CHEM", working_dir + "\\2024_Jan_chem_exam.txt",
                 working_dir + "\\2024_Jan_chem_ans_formatted.txt")
     print(len(exam.get_invalid_questions()))
-    for question in sorted(exam.get_invalid_questions()[0]):
+    for question in sorted(exam.get_invalid_questions()):
         print(str(question.number) + " : " + str(question.get_validation_errors()) + " : " + str(question))
