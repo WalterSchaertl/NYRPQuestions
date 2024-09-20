@@ -72,10 +72,13 @@ class GUI(Tk):
         math_button_frame.grid(row=8, column=0, columnspan=6, sticky="nsew", padx=20, pady=5)
         math_char = Button(math_button_frame, text="Convert Chars", command=lambda: self.format_text("ital"))
         lte = Button(math_button_frame, text="≤", command=lambda: self.pdf_text.insert(self.pdf_text.index(INSERT), "≤"))
+        net = Button(math_button_frame, text="≠", command=lambda: self.pdf_text.insert(self.pdf_text.index(INSERT), "≠"))
         gte = Button(math_button_frame, text="≥", command=lambda: self.pdf_text.insert(self.pdf_text.index(INSERT), "≥"))
         times = Button(math_button_frame, text="•", command=lambda: self.pdf_text.insert(self.pdf_text.index(INSERT), "•"))
+        infinity = Button(math_button_frame, text="∞", command=lambda: self.pdf_text.insert(self.pdf_text.index(INSERT), "∞"))
+        intersect = Button(math_button_frame, text="∩", command=lambda: self.pdf_text.insert(self.pdf_text.index(INSERT), "∩"))
         rad = Button(math_button_frame, text="√", command=lambda:self.format_text("rad"))
-        for button in [math_char, lte, gte, times, rad]:
+        for button in [math_char, lte, net, gte, times, rad, infinity, intersect]:
             button.pack(expand=True, fill='both', side=tkinter.LEFT)
 
         # Question Text

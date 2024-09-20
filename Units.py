@@ -53,6 +53,25 @@ ALG1_UNITS = [
 	("10", "10: Interpreting Categorical and Quantitative Data")
 ]
 
+ALG2_UNITS = [
+	("0", "0: None"),
+	("1", "1: The Real Number System"),
+	("2", "2: Quantities"),
+	("3", "3: The Complex Number System"),
+	("4", "4: Seeing Structure in Expressions"),
+	("5", "5: Arithmetic with Polynomials and Rational Expressions"),
+	("6", "6: Creating Equations"),
+	("7", "7: Reasoning with Equations and Inequalities"),
+	("8", "8: Expressing Geometric Properties with Equations"),
+	("9", "9: Interpreting Functions"),
+	("10", "10: Building Functions"),
+	("11", "11: Linear, Quadratic, and Exponential Models "),
+	("12", "12: Trigonometric Functions "),
+	("13", "13: Interpreting categorical and quantitative data "),
+	("14", "14: Making Inferences and Justifying Conclusions"),
+	("15", "15: Conditional Probability and the Rules of Probability ")
+]
+
 GHG2_UNITS = [
 	("0", "0: None"),
 	("1", "1: The World in 1750"),  # 10.1
@@ -128,6 +147,25 @@ ALG1_UNIT_KEYWORDS = {
 	ALG1_UNITS[10][0]: ["S-ID"],
 }
 
+ALG2_UNIT_KEYWORDS = {
+	ALG2_UNITS[0][0]: ["not_a_thing"],  # todo fix me
+	ALG2_UNITS[1][0]: ["N-RN"],
+	ALG2_UNITS[2][0]: ["N-Q"],
+	ALG2_UNITS[3][0]: ["N-CN"],
+	ALG2_UNITS[4][0]: ["A-SSE"],
+	ALG2_UNITS[5][0]: ["A-APR"],
+	ALG2_UNITS[6][0]: ["A-CED"],
+	ALG2_UNITS[7][0]: ["A-REI"],
+	ALG2_UNITS[8][0]: ["G-GPE"],
+	ALG2_UNITS[9][0]: ["F-IF"],
+	ALG2_UNITS[10][0]: ["F-BF"],
+	ALG2_UNITS[11][0]: ["F-LE"],
+	ALG2_UNITS[12][0]: ["F-TF"],
+	ALG2_UNITS[13][0]: ["S-ID"],
+	ALG2_UNITS[14][0]: ["S-IC"],
+	ALG2_UNITS[15][0]: ["S-CP"]
+}
+
 GHG2_UNIT_KEYWORDS = {
 	GHG2_UNITS[0][0]: ["10.0"],
 	GHG2_UNITS[1][0]: ["10.1"],
@@ -154,6 +192,8 @@ def get_units(subject: str) -> list:
 		return USHG_UNITS
 	elif subject == "ALG1":
 		return ALG1_UNITS
+	elif subject == "ALG2":
+		return ALG2_UNITS
 	elif subject == "GHG2":
 		return GHG2_UNITS
 	return [("0", "Unit not supported yet")]
@@ -181,9 +221,14 @@ def guess_unit(quest_num: int, subject: str, question_and_answers: str) -> str:
 		return CHEM_UNITS[best_unit][1]
 	elif subject == "ALG1":
 		for unit in range(0, len(ALG1_UNITS)):  # TODO fix this
-			if question_and_answers.strip() == ALG1_UNIT_KEYWORDS[str(unit)][0]:
+			if question_and_answers.strip().startswith(ALG1_UNIT_KEYWORDS[str(unit)][0]):
 				return ALG1_UNITS[unit][1]
 		return ALG1_UNITS[0][1]
+	elif subject == "ALG2":
+		for unit in range(0, len(ALG2_UNITS)):  # TODO fix this
+			if question_and_answers.strip().startswith(ALG2_UNIT_KEYWORDS[str(unit)][0]):
+				return ALG2_UNITS[unit][1]
+		return ALG2_UNITS[0][1]
 	elif subject == "GHG2":
 		for unit in range(0, len(GHG2_UNITS)):
 			if question_and_answers.strip() == GHG2_UNIT_KEYWORDS[str(unit)][0]:
