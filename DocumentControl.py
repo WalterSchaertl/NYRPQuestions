@@ -6,6 +6,33 @@ import requests
 import os
 import time
 import validators
+from enum import Enum
+
+
+class ExamCode(str, Enum):
+    CHEM = "CHEM"  # Chemistry
+    USHG = "USHG"  # United States History and Government
+    ALG1 = "ALG1"  # Algebra 1
+    ALG2 = "ALG2"  # Algebra 2
+    GHG2 = "GHG2"  # Global History and Geography 2
+    ESCI = "ESCI"  # Earth Science
+
+
+class ExamMonths(str, Enum):
+    JAN = "January"
+    JUN = "June"
+    AUG = "August"
+
+
+# TODO Update if including historical exams with different number of questions
+QUESTION_PER_SUBJECT = {
+    ExamCode.CHEM: 50,
+    ExamCode.USHG: 28,
+    ExamCode.ALG1: 24,
+    ExamCode.GHG2: 28,
+    ExamCode.ALG2: 24,
+    ExamCode.ESCI: 50
+}
 
 POST_URL = "https://api2.online-convert.com/jobs"
 SEND_TEMPLATE = {
@@ -16,12 +43,9 @@ SEND_TEMPLATE = {
     "conversion": [{"target": "txt"}]}
 DOCUMENT_ROOT = "."  # configure to where you want to store results
 SETTINGS = "config.properties"
-# TODO refactor as enums
-SUPPORTED_SUBJECTS = ["CHEM", "USHG", "ALG1", "ALG2", "GHG2"]  # Subjects known to convert correctly
-SUPPORTED_MONTHS = ["January", "February", "March", "April", "May", "June", "July",
-                    "August", "September", "October", "November", "December"]
-# TODO this is better than assuming 50, but if including historical exams this will also change by year
-QUESTION_PER_SUBJECT = {"CHEM": 50, "USHG": 28, "ALG1": 24, "GHG2": 28, "ALG2": 24}
+# Backwards compatibility
+SUPPORTED_SUBJECTS = [subject.value for subject in ExamCode]
+SUPPORTED_MONTHS = [month.value for month in ExamMonths]
 
 
 class DocumentControl:

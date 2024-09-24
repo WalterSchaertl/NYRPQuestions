@@ -232,12 +232,12 @@ class Exam:
                     unit_text = Units.get_units(self.subj)[(self.units.get(question_number))][1]
                 # Third, Check to see if we read in the unit file
                 elif units.get(question_number) is not None:
-                    unit_text = Units.guess_unit(question_number, self.subj, units.get(question_number))
+                    unit_text = Units.guess_unit(self.subj, units.get(question_number))
                 # Fourth, try to guess the unit if the unit is zero
                 elif unit_text is None or "0: None" in unit_text:  # TODO change to enum rather than string
                     question_and_answers = " {} {} {} {} {} ".format(question_text, opts[1], opts[2], opts[3], opts[4])\
                         .replace(",", " ").replace(".", " ").replace("?", " ").lower()
-                    unit_text = Units.guess_unit(question_number, self.subj, question_and_answers)
+                    unit_text = Units.guess_unit(self.subj, question_and_answers)
                 # Check to see if we already found this question this round
                 if question_number in found_questions:
                     errors.add("Found multiple question candidates for #" + str(question_number))
